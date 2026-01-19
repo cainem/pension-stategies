@@ -720,16 +720,60 @@ h3 { font-size: var(--font-size-xl); }
    Animation & Visibility
    ============================================ */
 .results-section,
-.summary-section {
+.summary-section,
+.charts-section {
   opacity: 0;
   transform: translateY(20px);
   transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
 .results-section.visible,
-.summary-section.visible {
+.summary-section.visible,
+.charts-section.visible {
   opacity: 1;
   transform: translateY(0);
+}
+
+/* ============================================
+   Charts Section
+   ============================================ */
+.charts-section {
+  margin-top: var(--spacing-xl);
+  padding: var(--spacing-xl);
+  background: var(--color-bg-card);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+}
+
+.charts-section h2 {
+  margin-bottom: var(--spacing-lg);
+  text-align: center;
+  color: var(--color-text);
+}
+
+.charts-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-xl);
+}
+
+@media (max-width: 1024px) {
+  .charts-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.chart-container {
+  background: var(--color-bg);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-lg);
+  min-height: 400px;
+  position: relative;
+}
+
+.chart-container canvas {
+  width: 100% !important;
+  height: 100% !important;
 }
 
 /* ============================================

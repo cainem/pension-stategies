@@ -6,6 +6,7 @@
 import { initInputForm, disableForm, enableForm } from './components/inputForm.js';
 import { renderGoldResults, renderSippResults, clearResults, showResultsSection } from './components/resultsTable.js';
 import { renderSummary, clearSummary } from './components/summary.js';
+import { renderCharts, clearCharts, showChartsSection } from './components/chart.js';
 import { compareStrategies } from './calculators/comparisonEngine.js';
 
 /**
@@ -29,6 +30,7 @@ async function handleCalculation(inputs) {
     disableForm();
     clearResults();
     clearSummary();
+    clearCharts();
 
     // Small delay to allow UI to update
     await new Promise(resolve => setTimeout(resolve, 10));
@@ -45,6 +47,10 @@ async function handleCalculation(inputs) {
     renderGoldResults(comparison.gold);
     renderSippResults(comparison.sipp);
     showResultsSection();
+
+    // Render charts
+    renderCharts(comparison);
+    showChartsSection();
 
     // Render summary
     renderSummary(comparison);
