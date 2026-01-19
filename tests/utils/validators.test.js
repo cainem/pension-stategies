@@ -8,7 +8,9 @@ import {
   validatePensionAmount,
   validateStartYear,
   validateWithdrawalRate,
-  validateComparisonYears
+  validateComparisonYears,
+  isValidYear,
+  isValidAmount
 } from '../../src/utils/validators.js';
 
 describe('validatePensionAmount', () => {
@@ -65,7 +67,7 @@ describe('validateStartYear', () => {
   });
 
   it('given_year2025_when_validating_then_returnsValid', () => {
-    const result = validateStartYear(2025);
+    const result = validateStartYear(2026);
     expect(result.valid).toBe(true);
   });
 
@@ -75,8 +77,8 @@ describe('validateStartYear', () => {
     expect(result.error).toContain('cannot be before');
   });
 
-  it('given_yearAfter2025_when_validating_then_returnsError', () => {
-    const result = validateStartYear(2026);
+  it('given_yearAfter2026_when_validating_then_returnsError', () => {
+    const result = validateStartYear(2027);
     expect(result.valid).toBe(false);
     expect(result.error).toContain('cannot be after');
   });
@@ -215,5 +217,62 @@ describe('validateInputs', () => {
     };
     const result = validateInputs(inputs);
     expect(result.valid).toBe(true);
+  });
+});
+
+// ============================================================
+// Simple boolean validators (used by calculators)
+// ============================================================
+
+describe('isValidYear', () => {
+  it('given_yearWithinRange_when_validating_then_returnsTrue', () => {
+    expect(isValidYear(2000)).toBe(true);
+    expect(isValidYear(2010)).toBe(true);
+    expect(isValidYear(2026)).toBe(true);
+  });
+
+  it('given_yearBelowRange_when_validating_then_returnsFalse', () => {
+    expect(isValidYear(1999)).toBe(false);
+    expect(isValidYear(1900)).toBe(false);
+  });
+
+  it('given_yearAboveRange_when_validating_then_returnsFalse', () => {
+    expect(isValidYear(2027)).toBe(false);
+    expect(isValidYear(2100)).toBe(false);
+  });
+
+  it('given_nonInteger_when_validating_then_returnsFalse', () => {
+    expect(isValidYear(2020.5)).toBe(false);
+  });
+
+  it('given_nonNumber_when_validating_then_returnsFalse', () => {
+    expect(isValidYear('2020')).toBe(false);
+    expect(isValidYear(null)).toBe(false);
+    expect(isValidYear(undefined)).toBe(false);
+    expect(isValidYear(NaN)).toBe(false);
+  });
+});
+
+describe('isValidAmount', () => {
+  it('given_positiveNumber_when_validating_then_returnsTrue', () => {
+    expect(isValidAmount(100000)).toBe(true);
+    expect(isValidAmount(0.01)).toBe(true);
+    expect(isValidAmount(1000000)).toBe(true);
+  });
+
+  it('given_zero_when_validating_then_returnsTrue', () => {
+    expect(isValidAmount(0)).toBe(true);
+  });
+
+  it('given_negativeNumber_when_validating_then_returnsFalse', () => {
+    expect(isValidAmount(-1)).toBe(false);
+    expect(isValidAmount(-1000)).toBe(false);
+  });
+
+  it('given_nonNumber_when_validating_then_returnsFalse', () => {
+    expect(isValidAmount('50000')).toBe(false);
+    expect(isValidAmount(null)).toBe(false);
+    expect(isValidAmount(undefined)).toBe(false);
+    expect(isValidAmount(NaN)).toBe(false);
   });
 });

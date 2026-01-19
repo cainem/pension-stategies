@@ -126,3 +126,31 @@ export function validateComparisonYears(years) {
   }
   return { valid: true };
 }
+
+// ============================================================
+// Simple boolean validators for use in calculators
+// ============================================================
+
+/**
+ * Check if a year is valid (within supported range)
+ * @param {number} year - Year to validate
+ * @returns {boolean} True if year is valid
+ */
+export function isValidYear(year) {
+  return typeof year === 'number' &&
+         !isNaN(year) &&
+         Number.isInteger(year) &&
+         year >= YEAR_RANGE.min &&
+         year <= YEAR_RANGE.max;
+}
+
+/**
+ * Check if an amount is valid (non-negative number)
+ * @param {number} amount - Amount to validate
+ * @returns {boolean} True if amount is valid
+ */
+export function isValidAmount(amount) {
+  return typeof amount === 'number' &&
+         !isNaN(amount) &&
+         amount >= 0;
+}

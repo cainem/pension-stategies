@@ -11,7 +11,7 @@ export const DEFAULTS = {
 
 export const YEAR_RANGE = {
   min: 2000,
-  max: 2025
+  max: 2026
 };
 
 export const LIMITS = {
