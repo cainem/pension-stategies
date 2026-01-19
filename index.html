@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Compare UK pension withdrawal strategies: Gold vs S&P 500 SIPP investment">
+  <title>Pension Strategy Comparison | Gold vs S&P 500 SIPP</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <header class="header">
+    <h1>Pension Strategy Comparison</h1>
+    <p class="subtitle">Compare Gold vs S&P 500 SIPP withdrawal strategies</p>
+  </header>
+
+  <main class="main">
+    <section class="input-section" aria-labelledby="input-heading">
+      <h2 id="input-heading" class="visually-hidden">Configuration</h2>
+      <form id="strategy-form" class="strategy-form">
+        <div class="form-group">
+          <label for="pension-amount">Starting Pension Amount (£)</label>
+          <input
+            type="number"
+            id="pension-amount"
+            name="pensionAmount"
+            value="500000"
+            min="10000"
+            max="10000000"
+            step="1000"
+            required
+          >
+        </div>
+
+        <div class="form-group">
+          <label for="start-year">Starting Year</label>
+          <select id="start-year" name="startYear" required>
+            <!-- Populated by JavaScript -->
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="withdrawal-rate">Annual Withdrawal Rate (%)</label>
+          <input
+            type="number"
+            id="withdrawal-rate"
+            name="withdrawalRate"
+            value="4"
+            min="1"
+            max="10"
+            step="0.5"
+            required
+          >
+        </div>
+
+        <div class="form-group">
+          <label for="comparison-years">Comparison Period (Years)</label>
+          <input
+            type="number"
+            id="comparison-years"
+            name="comparisonYears"
+            value="25"
+            min="5"
+            max="30"
+            step="1"
+            required
+          >
+        </div>
+
+        <button type="submit" class="btn btn-primary">Calculate Comparison</button>
+      </form>
+    </section>
+
+    <section class="results-section" aria-labelledby="results-heading">
+      <h2 id="results-heading">Results</h2>
+
+      <div id="error-message" class="error-message" role="alert" hidden></div>
+
+      <div class="results-grid">
+        <div class="strategy-column" id="gold-results">
+          <h3>Gold Strategy</h3>
+          <div class="initial-summary" id="gold-initial"></div>
+          <div class="table-container">
+            <table class="results-table" id="gold-table">
+              <thead>
+                <tr>
+                  <th scope="col">Year</th>
+                  <th scope="col">Gold Price</th>
+                  <th scope="col">Holdings (oz)</th>
+                  <th scope="col">Withdrawal</th>
+                  <th scope="col">Fees</th>
+                  <th scope="col">Net Received</th>
+                  <th scope="col">Portfolio Value</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="strategy-column" id="sipp-results">
+          <h3>S&P 500 SIPP Strategy</h3>
+          <div class="initial-summary" id="sipp-initial"></div>
+          <div class="table-container">
+            <table class="results-table" id="sipp-table">
+              <thead>
+                <tr>
+                  <th scope="col">Year</th>
+                  <th scope="col">Unit Price</th>
+                  <th scope="col">Units Held</th>
+                  <th scope="col">Withdrawal</th>
+                  <th scope="col">Tax + Fees</th>
+                  <th scope="col">Net Received</th>
+                  <th scope="col">Portfolio Value</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="summary-section" aria-labelledby="summary-heading" id="summary-section" hidden>
+      <h2 id="summary-heading">Summary Comparison</h2>
+      <div id="summary-content" class="summary-grid"></div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>
+      <strong>Disclaimer:</strong> This tool is for educational purposes only.
+      It does not constitute financial advice. Past performance does not guarantee future results.
+      Consult a qualified financial advisor before making pension decisions.
+    </p>
+  </footer>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
