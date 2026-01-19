@@ -1,7 +1,7 @@
 # Implementation Plan
 ## Pension Strategy Comparison Tool
 
-**Version:** 1.0  
+**Version:** 1.0
 **Date:** January 19, 2026
 
 ---
@@ -75,7 +75,7 @@ pension-strategies/
 ## Implementation Stages
 
 ### Stage 1: Project Setup & Infrastructure
-**Duration:** 1 day  
+**Duration:** 1 day
 **Priority:** Critical
 
 #### Tasks:
@@ -108,7 +108,7 @@ pension-strategies/
 ---
 
 ### Stage 2: Historical Data Collection & Hardcoding
-**Duration:** 2 days  
+**Duration:** 2 days
 **Priority:** Critical
 
 #### Tasks:
@@ -146,7 +146,7 @@ given_ukTaxData_when_accessingYear2010_then_includesAdditionalRate
 ---
 
 ### Stage 3: Tax Calculator Module
-**Duration:** 2 days  
+**Duration:** 2 days
 **Priority:** Critical
 
 #### Tasks:
@@ -182,7 +182,7 @@ given_incomeExactlyAtBasicThreshold_when_calculatingTax_then_noHigherRateTax
 ---
 
 ### Stage 4: Synthetic ETF Price Calculator
-**Duration:** 1 day  
+**Duration:** 1 day
 **Priority:** Critical
 
 #### Tasks:
@@ -212,7 +212,7 @@ given_sp500Increase_when_calculatingPrice_then_increasesGBPPrice
 ---
 
 ### Stage 5: Gold Strategy Calculator
-**Duration:** 2 days  
+**Duration:** 2 days
 **Priority:** Critical
 
 #### Tasks:
@@ -255,7 +255,7 @@ given_multipleYears_when_simulating_then_tracksRunningBalance
 ---
 
 ### Stage 6: SIPP Strategy Calculator
-**Duration:** 2 days  
+**Duration:** 2 days
 **Priority:** Critical
 
 #### Tasks:
@@ -294,7 +294,7 @@ given_multipleYears_when_simulating_then_tracksRunningBalance
 ---
 
 ### Stage 7: Input Form Component
-**Duration:** 1 day  
+**Duration:** 1 day
 **Priority:** High
 
 #### Tasks:
@@ -327,7 +327,7 @@ given_nonNumericInput_when_validating_then_returnsError
 ---
 
 ### Stage 8: Results Table Component
-**Duration:** 2 days  
+**Duration:** 2 days
 **Priority:** High
 
 #### Tasks:
@@ -362,7 +362,7 @@ given_negativeValue_when_formatting_then_displaysCorrectly
 ---
 
 ### Stage 9: Summary Component
-**Duration:** 1 day  
+**Duration:** 1 day
 **Priority:** High
 
 #### Tasks:
@@ -394,7 +394,7 @@ given_fundsExhausted_when_summarizing_then_notesExhaustion
 ---
 
 ### Stage 10: Application Integration
-**Duration:** 1 day  
+**Duration:** 1 day
 **Priority:** High
 
 #### Tasks:
@@ -425,7 +425,7 @@ given_calculationError_when_running_then_handlesGracefully
 ---
 
 ### Stage 11: Polish & Deployment
-**Duration:** 1 day  
+**Duration:** 1 day
 **Priority:** Medium
 
 #### Tasks:

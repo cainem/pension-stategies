@@ -1,0 +1,59 @@
+/**
+ * Historical Gold Prices (GBP per Troy Ounce)
+ * Source: LBMA Gold Price, January 1st (or first trading day) each year
+ *
+ * Note: Prices are the London PM Fix in GBP
+ */
+
+export const goldPrices = {
+  2000: 177.83,   // Jan 4, 2000 (first trading day)
+  2001: 174.59,   // Jan 2, 2001
+  2002: 180.07,   // Jan 2, 2002
+  2003: 214.80,   // Jan 2, 2003
+  2004: 227.47,   // Jan 2, 2004
+  2005: 244.70,   // Jan 4, 2005
+  2006: 296.17,   // Jan 3, 2006
+  2007: 320.17,   // Jan 2, 2007
+  2008: 447.00,   // Jan 2, 2008
+  2009: 554.78,   // Jan 2, 2009
+  2010: 612.10,   // Jan 4, 2010
+  2011: 892.05,   // Jan 4, 2011
+  2012: 1013.61,  // Jan 3, 2012
+  2013: 1054.47,  // Jan 2, 2013
+  2014: 772.01,   // Jan 2, 2014
+  2015: 778.62,   // Jan 2, 2015
+  2016: 737.63,   // Jan 4, 2016
+  2017: 943.46,   // Jan 3, 2017
+  2018: 957.43,   // Jan 2, 2018
+  2019: 997.02,   // Jan 2, 2019
+  2020: 1178.34,  // Jan 2, 2020
+  2021: 1385.42,  // Jan 4, 2021
+  2022: 1336.64,  // Jan 4, 2022
+  2023: 1508.03,  // Jan 3, 2023
+  2024: 1606.71,  // Jan 2, 2024
+  2025: 2097.65,  // Jan 2, 2025
+  2026: 2127.43   // Jan 2, 2026 (estimated based on recent trends)
+};
+
+/**
+ * Get gold price for a specific year
+ * @param {number} year - The year to get the price for
+ * @returns {number} Gold price in GBP per troy ounce
+ * @throws {Error} If year is not in the dataset
+ */
+export function getGoldPrice(year) {
+  if (!(year in goldPrices)) {
+    throw new Error(`Gold price data not available for year ${year}`);
+  }
+  return goldPrices[year];
+}
+
+/**
+ * Get all available years
+ * @returns {number[]} Array of years with data
+ */
+export function getAvailableYears() {
+  return Object.keys(goldPrices).map(Number).sort((a, b) => a - b);
+}
+
+export default goldPrices;

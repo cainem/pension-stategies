@@ -3,17 +3,17 @@ import { defineConfig } from 'vite';
 export default defineConfig({
   // Base URL for GitHub Pages deployment
   base: '/pension-strategies/',
-  
+
   build: {
     outDir: 'dist',
     sourcemap: true
   },
-  
+
   server: {
     port: 3000,
     open: true
   },
-  
+
   test: {
     globals: true,
     environment: 'node',

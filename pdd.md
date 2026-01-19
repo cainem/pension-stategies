@@ -1,8 +1,8 @@
 # Product Definition Document (PDD)
 ## Pension Strategy Comparison Tool
 
-**Version:** 1.0  
-**Date:** January 19, 2026  
+**Version:** 1.0
+**Date:** January 19, 2026
 **Status:** Draft
 
 ---

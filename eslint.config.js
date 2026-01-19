@@ -22,7 +22,7 @@ export default [
       'no-func-assign': 'error',
       'no-unreachable': 'error',
       'valid-typeof': 'error',
-      
+
       // Best practices
       'eqeqeq': ['error', 'always'],
       'no-eval': 'error',
@@ -31,7 +31,7 @@ export default [
       'no-self-compare': 'error',
       'no-throw-literal': 'error',
       'prefer-const': 'error',
-      
+
       // Style consistency
       'semi': ['error', 'always'],
       'quotes': ['error', 'single', { avoidEscape: true }],
