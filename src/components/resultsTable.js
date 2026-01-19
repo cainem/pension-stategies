@@ -87,6 +87,14 @@ function renderSippInitialSummary(result) {
           <dt>Initial Tax</dt>
           <dd class="positive">£0 (stays in SIPP)</dd>
         </div>
+        <div class="summary-item">
+          <dt>Initial Value</dt>
+          <dd>${formatCurrency(initialInvestment.initialValue)}</dd>
+        </div>
+        <div class="summary-item">
+          <dt>Annual Management Fee</dt>
+          <dd>0.5%</dd>
+        </div>
         <div class="summary-item highlight">
           <dt>Units Acquired</dt>
           <dd>${formatNumber(initialInvestment.unitsAcquired, 2)} @ ${formatCurrency(initialInvestment.etfPriceAtStart)}/unit</dd>

@@ -238,6 +238,7 @@ h3 { font-size: var(--font-size-xl); }
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--spacing-xl);
+  align-items: start;
 }
 
 @media (max-width: 1024px) {
