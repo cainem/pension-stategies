@@ -3,79 +3,76 @@
  * Wires together components and handles user interactions
  */
 
-import { DEFAULTS, YEAR_RANGE } from './config/defaults.js';
-import { validateInputs } from './utils/validators.js';
+import { initInputForm, disableForm, enableForm } from './components/inputForm.js';
+import { renderGoldResults, renderSippResults, clearResults, showResultsSection } from './components/resultsTable.js';
+import { renderSummary, clearSummary } from './components/summary.js';
+import { compareStrategies } from './calculators/comparisonEngine.js';
 
 /**
  * Initialize the application
  */
 export function initApp() {
-  populateYearDropdown();
-  setupFormHandler();
+  initInputForm({
+    onSubmit: handleCalculation
+  });
+
   console.log('Pension Strategy Comparison Tool initialized');
 }
 
 /**
- * Populate the year dropdown with valid years
+ * Handle the calculation when form is submitted
+ *
+ * @param {Object} inputs - Validated form inputs
  */
-function populateYearDropdown() {
-  const select = document.getElementById('start-year');
-  if (!select) return;
+async function handleCalculation(inputs) {
+  try {
+    disableForm();
+    clearResults();
+    clearSummary();
 
-  for (let year = YEAR_RANGE.min; year <= YEAR_RANGE.max; year++) {
-    const option = document.createElement('option');
-    option.value = year;
-    option.textContent = year;
-    if (year === DEFAULTS.startYear) {
-      option.selected = true;
-    }
-    select.appendChild(option);
+    // Small delay to allow UI to update
+    await new Promise(resolve => setTimeout(resolve, 10));
+
+    // Run comparison
+    const comparison = compareStrategies(
+      inputs.pensionAmount,
+      inputs.startYear,
+      inputs.withdrawalRate,
+      inputs.years
+    );
+
+    // Render results
+    renderGoldResults(comparison.gold);
+    renderSippResults(comparison.sipp);
+    showResultsSection();
+
+    // Render summary
+    renderSummary(comparison);
+
+    // Scroll to results
+    scrollToResults();
+
+  } catch (error) {
+    console.error('Calculation error:', error);
+    showError(error.message || 'An error occurred during calculation');
+  } finally {
+    enableForm();
   }
 }
 
 /**
- * Set up the form submission handler
+ * Scroll to the results section
  */
-function setupFormHandler() {
-  const form = document.getElementById('strategy-form');
-  if (!form) return;
-
-  form.addEventListener('submit', handleFormSubmit);
-}
-
-/**
- * Handle form submission
- * @param {Event} event - Form submit event
- */
-function handleFormSubmit(event) {
-  event.preventDefault();
-
-  const formData = new FormData(event.target);
-  const inputs = {
-    pensionAmount: parseFloat(formData.get('pensionAmount')),
-    startYear: parseInt(formData.get('startYear'), 10),
-    withdrawalRate: parseFloat(formData.get('withdrawalRate')),
-    comparisonYears: parseInt(formData.get('comparisonYears'), 10)
-  };
-
-  // Validate inputs
-  const validation = validateInputs(inputs);
-  if (!validation.valid) {
-    showError(validation.errors.join(', '));
-    return;
+function scrollToResults() {
+  const resultsSection = document.querySelector('.results-section');
+  if (resultsSection) {
+    resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
-
-  hideError();
-
-  // TODO: Implement calculation logic in later stages
-  console.log('Calculating with inputs:', inputs);
-
-  // Placeholder: Show message until calculators are implemented
-  showError('Calculation logic will be implemented in Stage 5-6. Inputs validated successfully!');
 }
 
 /**
  * Display an error message
+ *
  * @param {string} message - Error message to display
  */
 function showError(message) {
@@ -95,3 +92,4 @@ function hideError() {
     errorEl.hidden = true;
   }
 }
+
