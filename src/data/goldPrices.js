@@ -1,8 +1,9 @@
 /**
  * Historical Gold Prices (GBP per Troy Ounce)
- * Source: LBMA Gold Price, January 1st (or first trading day) each year
+ * Source: goldprice.org (USD prices converted to GBP using exchange rates)
+ * January 1st (or first trading day) each year
  *
- * Note: Prices are the London PM Fix in GBP
+ * Note: USD prices from goldprice.org, converted using GBP/USD exchange rates
  */
 
 export const goldPrices = {
@@ -26,13 +27,13 @@ export const goldPrices = {
   2017: 943.46,   // Jan 3, 2017
   2018: 957.43,   // Jan 2, 2018
   2019: 997.02,   // Jan 2, 2019
-  2020: 1178.34,  // Jan 2, 2020
+  2020: 1146.50,  // Jan 2, 2020 - $1519.50 USD
   2021: 1385.42,  // Jan 4, 2021
   2022: 1336.64,  // Jan 4, 2022
-  2023: 1508.03,  // Jan 3, 2023
-  2024: 1606.71,  // Jan 2, 2024
-  2025: 2097.65,  // Jan 2, 2025
-  2026: 2127.43   // Jan 2, 2026 (estimated based on recent trends)
+  2023: 1512.00,  // Jan 3, 2023 - $1823.91 USD
+  2024: 1620.37,  // Jan 2, 2024 - $2062.90 USD
+  2025: 2096.11,  // Jan 2, 2025 - $2623.96 USD
+  2026: 3489.36   // Jan 2, 2026 - $4321.48 USD (verified goldprice.org)
 };
 
 /**

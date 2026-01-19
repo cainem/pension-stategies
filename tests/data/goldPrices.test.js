@@ -37,10 +37,16 @@ describe('goldPrices data', () => {
     expect(price).toBeGreaterThan(800);
   });
 
+  it('given_year2026_when_gettingPrice_then_showsMajorSurge', () => {
+    // Gold surged significantly in 2025-2026
+    const price = goldPrices[2026];
+    expect(price).toBeGreaterThan(3000);
+  });
+
   it('given_recentYears_when_comparingPrices_then_showsOverallUpwardTrend', () => {
     expect(goldPrices[2025]).toBeGreaterThan(goldPrices[2000]);
-    // Should have at least 5x increase over 25 years
-    expect(goldPrices[2025] / goldPrices[2000]).toBeGreaterThan(5);
+    // Should have at least 10x increase over 25 years
+    expect(goldPrices[2025] / goldPrices[2000]).toBeGreaterThan(10);
   });
 });
 
