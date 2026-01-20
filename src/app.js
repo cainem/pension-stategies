@@ -159,6 +159,7 @@ function showDisclaimersSection() {
   const section = document.getElementById('disclaimers-section');
   if (section) {
     section.hidden = false;
+    section.classList.add('visible');
   }
 }
 

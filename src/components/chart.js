@@ -376,6 +376,7 @@ export function showChartsSection() {
   const section = document.getElementById('charts-section');
   if (section) {
     section.hidden = false;
+    section.classList.add('visible');
   }
 }
 
@@ -386,5 +387,6 @@ export function hideChartsSection() {
   const section = document.getElementById('charts-section');
   if (section) {
     section.hidden = true;
+    section.classList.remove('visible');
   }
 }

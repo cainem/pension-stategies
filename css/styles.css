@@ -100,6 +100,11 @@ h3 { font-size: var(--font-size-xl); }
   border: 0;
 }
 
+/* Ensure hidden attribute works correctly */
+[hidden] {
+  display: none !important;
+}
+
 /* ============================================
    Header
    ============================================ */
@@ -842,7 +847,9 @@ h3 { font-size: var(--font-size-xl); }
    ============================================ */
 .results-section,
 .summary-section,
-.charts-section {
+.charts-section,
+.disclaimers-section {
+  display: none;
   opacity: 0;
   transform: translateY(20px);
   transition: opacity 0.3s ease, transform 0.3s ease;
@@ -850,7 +857,9 @@ h3 { font-size: var(--font-size-xl); }
 
 .results-section.visible,
 .summary-section.visible,
-.charts-section.visible {
+.charts-section.visible,
+.disclaimers-section.visible {
+  display: block;
   opacity: 1;
   transform: translateY(0);
 }
