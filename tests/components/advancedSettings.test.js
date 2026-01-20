@@ -18,7 +18,7 @@ import { compareStrategies } from '../../src/calculators/comparisonEngine.js';
 describe('configurable fees integration', () => {
   describe('default config values', () => {
     test('given_defaultCosts_when_checking_then_hasExpectedValues', () => {
-      expect(COSTS.goldTransactionPercent).toBe(2);
+      expect(COSTS.goldTransactionPercent).toBe(3);  // 3% realistic dealer cost
       expect(COSTS.goldStorageFeePercent).toBe(0.7);
       expect(COSTS.sippManagementFeePercent).toBe(0.5);
     });

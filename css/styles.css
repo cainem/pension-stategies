@@ -1193,3 +1193,124 @@ h3 { font-size: var(--font-size-xl); }
   color: var(--color-text-muted);
   font-size: var(--font-size-sm);
 }
+
+/* ============================================
+   Header Navigation
+   ============================================ */
+.header-nav {
+  position: absolute;
+  top: var(--spacing-md);
+  right: var(--spacing-lg);
+}
+
+.header {
+  position: relative;
+}
+
+.nav-link {
+  color: white;
+  text-decoration: none;
+  font-size: var(--font-size-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: var(--radius-md);
+  transition: all 0.2s ease;
+}
+
+.nav-link:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+/* ============================================
+   About Page
+   ============================================ */
+.about-main {
+  max-width: 800px;
+}
+
+.about-content {
+  background: var(--color-bg-card);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-xl);
+  box-shadow: var(--shadow-md);
+}
+
+.about-section {
+  margin-bottom: var(--spacing-xl);
+  padding-bottom: var(--spacing-xl);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.about-section:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.about-section h2 {
+  color: var(--color-primary);
+  margin-bottom: var(--spacing-md);
+}
+
+.about-section p {
+  margin: 0 0 var(--spacing-md) 0;
+}
+
+.about-section p:last-child {
+  margin-bottom: 0;
+}
+
+.about-section ul {
+  margin: var(--spacing-md) 0;
+  padding-left: var(--spacing-xl);
+}
+
+.about-section li {
+  margin-bottom: var(--spacing-sm);
+}
+
+.about-section a {
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.about-section a:hover {
+  text-decoration: underline;
+}
+
+.about-section--warning {
+  background: #fef3c7;
+  border: 1px solid #f59e0b;
+  border-radius: var(--radius-md);
+  padding: var(--spacing-lg);
+  margin-left: calc(-1 * var(--spacing-lg));
+  margin-right: calc(-1 * var(--spacing-lg));
+}
+
+.about-section--warning h2 {
+  color: #b45309;
+}
+
+.assumptions-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: var(--spacing-md) 0;
+  font-size: var(--font-size-sm);
+}
+
+.assumptions-table th,
+.assumptions-table td {
+  padding: var(--spacing-sm) var(--spacing-md);
+  text-align: left;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.assumptions-table th {
+  background: var(--color-bg);
+  font-weight: 600;
+}
+
+.assumptions-table tbody tr:hover {
+  background: var(--color-bg);
+}

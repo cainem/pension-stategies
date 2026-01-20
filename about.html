@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="About the Gold Plated Pension comparison tool - exploring UK pension withdrawal strategies">
+  <title>About | A Gold Plated Pension?</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <header class="header">
+    <nav class="header-nav">
+      <a href="index.html" class="nav-link">← Back to Calculator</a>
+    </nav>
+    <h1>About This Tool</h1>
+  </header>
+
+  <main class="main about-main">
+    <article class="about-content">
+      <section class="about-section">
+        <h2>What is this?</h2>
+        <p>
+          This is an educational tool that compares different UK pension withdrawal strategies 
+          using historical data. It allows you to explore what would have happened if you had 
+          withdrawn your pension at various points in history and invested in different asset classes.
+        </p>
+      </section>
+
+      <section class="about-section">
+        <h2>The Motivation</h2>
+        <p>
+          For some people, the idea of "dropping out" of the traditional financial system is appealing. 
+          Whether due to distrust of banks, concerns about currency debasement, or simply a desire for 
+          tangible assets, the question arises: <em>what would it actually cost?</em>
+        </p>
+        <p>
+          The UK pension system offers a unique opportunity to explore this question. Unlike most countries, 
+          UK pension rules (since 2015) allow you to withdraw your <strong>entire pension pot at any time</strong> 
+          after age 55 (rising to 57 from 2028). This flexibility means you genuinely have the choice to:
+        </p>
+        <ul>
+          <li>Keep your money in a SIPP (Self-Invested Personal Pension) invested in stocks</li>
+          <li>Withdraw it all, pay the tax, and buy physical gold</li>
+          <li>Or any combination of strategies</li>
+        </ul>
+      </section>
+
+      <section class="about-section">
+        <h2>The Gold Option</h2>
+        <p>
+          Physical gold has a special status in the UK tax system. Specifically, 
+          <strong>UK legal tender gold coins</strong> (such as Gold Britannias and Gold Sovereigns) are:
+        </p>
+        <ul>
+          <li><strong>VAT exempt</strong> – no 20% VAT when purchasing</li>
+          <li><strong>CGT exempt</strong> – no Capital Gains Tax when selling, regardless of profit</li>
+        </ul>
+        <p>
+          This means if you withdraw your pension (paying income tax on 75% of it), buy gold coins, 
+          and they increase in value over time, you pay <em>no additional tax</em> when selling them 
+          to fund your retirement.
+        </p>
+        <p>
+          Compare this to a SIPP where every withdrawal is taxed as income (75% taxable, 25% tax-free).
+        </p>
+      </section>
+
+      <section class="about-section">
+        <h2>What This Tool Shows</h2>
+        <p>
+          This tool uses historical data going back to 1980 to show what would have actually happened 
+          under each strategy. It compares:
+        </p>
+        <ul>
+          <li><strong>Physical Gold</strong> – Withdraw pension, pay tax, buy CGT-exempt gold coins</li>
+          <li><strong>Gold ETF SIPP</strong> – Keep pension invested in a gold-tracking ETF</li>
+          <li><strong>S&amp;P 500 SIPP</strong> – Keep pension invested in US stocks</li>
+          <li><strong>Nasdaq 100 SIPP</strong> – Keep pension invested in US tech stocks</li>
+          <li><strong>FTSE 100 SIPP</strong> – Keep pension invested in UK stocks</li>
+          <li><strong>Combined strategies</strong> – 50/50 splits of any two base strategies</li>
+        </ul>
+        <p>
+          All calculations include realistic costs: transaction fees, storage fees, management fees, 
+          and accurate historical UK tax rates.
+        </p>
+      </section>
+
+      <section class="about-section about-section--warning">
+        <h2>⚠️ Important Disclaimer</h2>
+        <p>
+          <strong>This tool is for educational and illustrative purposes only.</strong>
+        </p>
+        <p>
+          It is <strong>NOT financial advice</strong>. The calculations show what <em>would have happened</em> 
+          historically, not what <em>will happen</em> in the future. Past performance is not indicative of 
+          future results.
+        </p>
+        <p>
+          Before making any decisions about your pension:
+        </p>
+        <ul>
+          <li>Consult a qualified financial adviser</li>
+          <li>Understand the tax implications for your personal situation</li>
+          <li>Consider your risk tolerance and retirement timeline</li>
+          <li>Remember that all investments can go down as well as up</li>
+        </ul>
+        <p>
+          The author accepts no responsibility for any financial decisions made based on this tool.
+        </p>
+      </section>
+
+      <section class="about-section">
+        <h2>Technical Details</h2>
+        <p>
+          This is an open-source project. All calculations run entirely in your browser – 
+          no data is sent to any server.
+        </p>
+        <p>
+          <strong>Source Code:</strong> 
+          <a href="https://github.com/cainem/pension-stategies" target="_blank" rel="noopener noreferrer">
+            github.com/cainem/pension-stategies
+          </a>
+        </p>
+        <p>
+          <strong>Data Sources:</strong>
+        </p>
+        <ul>
+          <li>Gold prices: LBMA Gold Price (London Bullion Market Association)</li>
+          <li>S&amp;P 500: S&amp;P Dow Jones Indices Total Return</li>
+          <li>Exchange rates: Bank of England historical data</li>
+          <li>UK tax rates: HMRC historical tax tables</li>
+        </ul>
+      </section>
+
+      <section class="about-section">
+        <h2>Default Assumptions</h2>
+        <table class="assumptions-table">
+          <thead>
+            <tr>
+              <th>Parameter</th>
+              <th>Default Value</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Gold transaction cost</td>
+              <td>3%</td>
+              <td>Covers dealer spread and delivery; realistic for competitive dealers</td>
+            </tr>
+            <tr>
+              <td>Gold storage fee</td>
+              <td>0.7% per year</td>
+              <td>Secure vault storage; can be avoided if storing at home</td>
+            </tr>
+            <tr>
+              <td>SIPP management fee</td>
+              <td>0.5% per year</td>
+              <td>Typical for low-cost SIPP providers</td>
+            </tr>
+            <tr>
+              <td>Pension tax-free portion</td>
+              <td>25%</td>
+              <td>UK pension rules allow 25% tax-free withdrawal</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          All fees can be adjusted in the Advanced Settings on the calculator page.
+        </p>
+      </section>
+    </article>
+  </main>
+
+  <footer class="footer">
+    <p>
+      <a href="index.html">← Back to Calculator</a>
+    </p>
+  </footer>
+</body>
+</html>
