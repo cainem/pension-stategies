@@ -341,6 +341,31 @@ h3 { font-size: var(--font-size-xl); }
   color: var(--color-sipp);
 }
 
+/* Dynamic strategy column styling */
+.strategy-column.strategy-gold {
+  border-top-color: var(--color-gold);
+}
+
+.strategy-column.strategy-gold h3 {
+  color: var(--color-gold);
+}
+
+.strategy-column.strategy-sipp {
+  border-top-color: var(--color-sipp);
+}
+
+.strategy-column.strategy-sipp h3 {
+  color: var(--color-sipp);
+}
+
+.strategy-column.strategy-combined {
+  border-top-color: var(--color-secondary);
+}
+
+.strategy-column.strategy-combined h3 {
+  color: var(--color-secondary);
+}
+
 .initial-summary {
   background: var(--color-bg);
   border-radius: var(--radius-md);

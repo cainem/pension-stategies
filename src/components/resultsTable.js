@@ -20,6 +20,14 @@ export function renderResultsForStrategies(comparison) {
   // Update table headers with strategy names
   updateTableHeaders(strategy1.shortName, strategy2.shortName);
 
+  // Update column styling based on strategy type
+  updateColumnStyling('strategy1', strategy1);
+  updateColumnStyling('strategy2', strategy2);
+
+  // Update table column headers based on strategy type
+  updateTableColumnHeaders('strategy1', strategy1);
+  updateTableColumnHeaders('strategy2', strategy2);
+
   // Render initial summaries
   renderGenericInitialSummary('strategy1', strategy1);
   renderGenericInitialSummary('strategy2', strategy2);
@@ -33,11 +41,77 @@ export function renderResultsForStrategies(comparison) {
  * Update table headers with strategy names
  */
 function updateTableHeaders(name1, name2) {
-  const header1 = document.querySelector('#strategy1-section h3, #gold-section h3');
-  const header2 = document.querySelector('#strategy2-section h3, #sipp-section h3');
+  const header1 = document.querySelector('#gold-results h3');
+  const header2 = document.querySelector('#sipp-results h3');
 
-  if (header1) header1.textContent = `${name1} Strategy Results`;
-  if (header2) header2.textContent = `${name2} Strategy Results`;
+  if (header1) header1.textContent = `${name1} Strategy`;
+  if (header2) header2.textContent = `${name2} Strategy`;
+}
+
+/**
+ * Update column styling based on strategy type
+ */
+function updateColumnStyling(slot, strategyData) {
+  const columnId = slot === 'strategy1' ? 'gold-results' : 'sipp-results';
+  const column = document.getElementById(columnId);
+  if (!column) return;
+
+  const { type } = strategyData;
+
+  // Remove existing type classes
+  column.classList.remove('strategy-gold', 'strategy-sipp', 'strategy-combined');
+
+  // Add appropriate class based on type
+  if (type === STRATEGY_TYPES.GOLD) {
+    column.classList.add('strategy-gold');
+  } else if (type === STRATEGY_TYPES.SIPP) {
+    column.classList.add('strategy-sipp');
+  } else if (type === STRATEGY_TYPES.COMBINED) {
+    column.classList.add('strategy-combined');
+  }
+}
+
+/**
+ * Update table column headers based on strategy type
+ */
+function updateTableColumnHeaders(slot, strategyData) {
+  const tableId = slot === 'strategy1' ? 'gold-table' : 'sipp-table';
+  const thead = document.querySelector(`#${tableId} thead tr`);
+  if (!thead) return;
+
+  const { type, shortName } = strategyData;
+
+  if (type === STRATEGY_TYPES.GOLD) {
+    thead.innerHTML = `
+      <th scope="col">Year</th>
+      <th scope="col">Gold Price</th>
+      <th scope="col">Holdings (oz)</th>
+      <th scope="col">Withdrawal</th>
+      <th scope="col">Fees</th>
+      <th scope="col">Net Received</th>
+      <th scope="col">Portfolio Value</th>
+    `;
+  } else if (type === STRATEGY_TYPES.SIPP) {
+    thead.innerHTML = `
+      <th scope="col">Year</th>
+      <th scope="col">Unit Price</th>
+      <th scope="col">Units Held</th>
+      <th scope="col">Withdrawal</th>
+      <th scope="col">Tax + Fees</th>
+      <th scope="col">Net Received</th>
+      <th scope="col">Portfolio Value</th>
+    `;
+  } else if (type === STRATEGY_TYPES.COMBINED) {
+    thead.innerHTML = `
+      <th scope="col">Year</th>
+      <th scope="col">-</th>
+      <th scope="col">-</th>
+      <th scope="col">-</th>
+      <th scope="col">-</th>
+      <th scope="col">Net Received</th>
+      <th scope="col">Portfolio Value</th>
+    `;
+  }
 }
 
 /**
