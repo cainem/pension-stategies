@@ -408,3 +408,77 @@ describe('integration tests', () => {
     expect(result.yearlyResults[1].year).toBe(2026);
   });
 });
+
+describe('configurable fees', () => {
+  test('given_customGoldFees_when_calculatingCombined_then_usesCustomFees', () => {
+    const defaultResult = calculateCombinedStrategy('gold-sp500', 100000, 2020, 4, 5);
+    const customResult = calculateCombinedStrategy('gold-sp500', 100000, 2020, 4, 5, {
+      goldTransactionPercent: 1.0,
+      goldStorageFeePercent: 0.3
+    });
+
+    // Custom fees should result in lower costs on gold side
+    const defaultGoldFees = defaultResult.strategyA.result.summary.totalTransactionCosts +
+                            defaultResult.strategyA.result.summary.totalStorageFees;
+    const customGoldFees = customResult.strategyA.result.summary.totalTransactionCosts +
+                           customResult.strategyA.result.summary.totalStorageFees;
+
+    expect(customGoldFees).toBeLessThan(defaultGoldFees);
+  });
+
+  test('given_customSippFees_when_calculatingCombined_then_usesCustomFees', () => {
+    const defaultResult = calculateCombinedStrategy('gold-sp500', 100000, 2020, 4, 5);
+    const customResult = calculateCombinedStrategy('gold-sp500', 100000, 2020, 4, 5, {
+      sippManagementFeePercent: 0.25
+    });
+
+    // Custom fee should result in lower SIPP management fees
+    expect(customResult.strategyB.result.summary.totalManagementFees)
+      .toBeLessThan(defaultResult.strategyB.result.summary.totalManagementFees);
+  });
+
+  test('given_customFeesForBoth_when_calculatingCombined_then_usesAllCustomFees', () => {
+    const defaultResult = calculateCombinedStrategy('gold-sp500', 100000, 2020, 4, 5);
+    const customResult = calculateCombinedStrategy('gold-sp500', 100000, 2020, 4, 5, {
+      goldTransactionPercent: 1.0,
+      goldStorageFeePercent: 0.3,
+      sippManagementFeePercent: 0.25
+    });
+
+    // Both sides should have lower fees
+    expect(customResult.summary.totalFees).toBeLessThan(defaultResult.summary.totalFees);
+  });
+
+  test('given_customFeesForSippOnlyCombo_when_calculating_then_appliesToBoth', () => {
+    const defaultResult = calculateCombinedStrategy('sp500-nasdaq100', 100000, 2000, 4, 5);
+    const customResult = calculateCombinedStrategy('sp500-nasdaq100', 100000, 2000, 4, 5, {
+      sippManagementFeePercent: 0.2
+    });
+
+    // Both SIPP strategies should have lower fees
+    expect(customResult.strategyA.result.summary.totalManagementFees)
+      .toBeLessThan(defaultResult.strategyA.result.summary.totalManagementFees);
+    expect(customResult.strategyB.result.summary.totalManagementFees)
+      .toBeLessThan(defaultResult.strategyB.result.summary.totalManagementFees);
+  });
+
+  test('given_emptyConfig_when_calculatingCombined_then_usesDefaults', () => {
+    const emptyConfigResult = calculateCombinedStrategy('gold-sp500', 100000, 2020, 4, 5, {});
+    const noConfigResult = calculateCombinedStrategy('gold-sp500', 100000, 2020, 4, 5);
+
+    // Results should be identical
+    expect(emptyConfigResult.summary.totalFees).toBe(noConfigResult.summary.totalFees);
+  });
+});
+
+describe('calculateCombinedStrategyByIds with config', () => {
+  test('given_customFees_when_calculatingByIds_then_passesConfigThrough', () => {
+    const defaultResult = calculateCombinedStrategyByIds('gold', 'sp500', 100000, 2020, 4, 5);
+    const customResult = calculateCombinedStrategyByIds('gold', 'sp500', 100000, 2020, 4, 5, {
+      goldTransactionPercent: 1.0,
+      sippManagementFeePercent: 0.25
+    });
+
+    expect(customResult.summary.totalFees).toBeLessThan(defaultResult.summary.totalFees);
+  });
+});

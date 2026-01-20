@@ -7,6 +7,7 @@ import { initInputForm, disableForm, enableForm } from './components/inputForm.j
 import { renderGoldResults, renderSippResults, clearResults, showResultsSection } from './components/resultsTable.js';
 import { renderSummary, clearSummary } from './components/summary.js';
 import { renderCharts, clearCharts, showChartsSection } from './components/chart.js';
+import { initAdvancedSettings, getConfig } from './components/advancedSettings.js';
 import { compareStrategies } from './calculators/comparisonEngine.js';
 
 /**
@@ -16,6 +17,8 @@ export function initApp() {
   initInputForm({
     onSubmit: handleCalculation
   });
+
+  initAdvancedSettings();
 
   console.log('Pension Strategy Comparison Tool initialized');
 }
@@ -35,12 +38,16 @@ async function handleCalculation(inputs) {
     // Small delay to allow UI to update
     await new Promise(resolve => setTimeout(resolve, 10));
 
-    // Run comparison
+    // Get fee configuration from advanced settings
+    const config = getConfig();
+
+    // Run comparison with optional custom fees
     const comparison = compareStrategies(
       inputs.pensionAmount,
       inputs.startYear,
       inputs.withdrawalRate,
-      inputs.years
+      inputs.years,
+      config
     );
 
     // Render results

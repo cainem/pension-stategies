@@ -591,3 +591,98 @@ describe('multi-index support', () => {
     });
   });
 });
+
+describe('configurable fees', () => {
+  test('given_customManagementFee_when_calculating_then_usesCustomFee', () => {
+    const defaultResult = calculateSippStrategy(100000, 2020, 4, 5);
+    const customResult = calculateSippStrategy(100000, 2020, 4, 5, INDEX_TYPES.SP500, {
+      sippManagementFeePercent: 0.25 // 0.25% instead of default 0.5%
+    });
+
+    // Custom fee result should have lower management fees
+    expect(customResult.summary.totalManagementFees)
+      .toBeLessThan(defaultResult.summary.totalManagementFees);
+  });
+
+  test('given_higherManagementFee_when_calculating_then_resultsDiffer', () => {
+    const defaultResult = calculateSippStrategy(100000, 2020, 4, 5);
+    const highFeeResult = calculateSippStrategy(100000, 2020, 4, 5, INDEX_TYPES.SP500, {
+      sippManagementFeePercent: 1.0 // 1% instead of default 0.5%
+    });
+
+    // Higher fee = higher total fees
+    expect(highFeeResult.summary.totalManagementFees)
+      .toBeGreaterThan(defaultResult.summary.totalManagementFees);
+
+    // Higher fee = lower final value
+    expect(highFeeResult.summary.finalValue)
+      .toBeLessThan(defaultResult.summary.finalValue);
+  });
+
+  test('given_zeroManagementFee_when_calculating_then_noFeeDeducted', () => {
+    const result = calculateSippStrategy(100000, 2020, 4, 5, INDEX_TYPES.SP500, {
+      sippManagementFeePercent: 0
+    });
+
+    expect(result.summary.totalManagementFees).toBe(0);
+  });
+
+  test('given_emptyConfig_when_calculating_then_usesDefaults', () => {
+    const emptyConfigResult = calculateSippStrategy(100000, 2020, 4, 5, INDEX_TYPES.SP500, {});
+    const noConfigResult = calculateSippStrategy(100000, 2020, 4, 5);
+
+    // Results should be identical
+    expect(emptyConfigResult.summary.totalManagementFees)
+      .toBe(noConfigResult.summary.totalManagementFees);
+  });
+
+  test('given_customFeeWithNasdaq_when_calculating_then_usesCustomFee', () => {
+    const defaultResult = calculateSippStrategy(100000, 2000, 4, 5, INDEX_TYPES.NASDAQ100);
+    const customResult = calculateSippStrategy(100000, 2000, 4, 5, INDEX_TYPES.NASDAQ100, {
+      sippManagementFeePercent: 0.2
+    });
+
+    expect(customResult.summary.totalManagementFees)
+      .toBeLessThan(defaultResult.summary.totalManagementFees);
+  });
+
+  test('given_customFeeWithFTSE_when_calculating_then_usesCustomFee', () => {
+    const defaultResult = calculateSippStrategy(100000, 1985, 4, 5, INDEX_TYPES.FTSE100);
+    const customResult = calculateSippStrategy(100000, 1985, 4, 5, INDEX_TYPES.FTSE100, {
+      sippManagementFeePercent: 0.2
+    });
+
+    expect(customResult.summary.totalManagementFees)
+      .toBeLessThan(defaultResult.summary.totalManagementFees);
+  });
+});
+
+describe('calculateSippYearsRemaining with config', () => {
+  test('given_customManagementFee_when_calculatingYearsRemaining_then_usesCustomFee', () => {
+    const units = 100;
+    const startYear = 2020;
+    const annualWithdrawal = 10000;
+
+    const defaultYears = calculateSippYearsRemaining(units, startYear, annualWithdrawal, INDEX_TYPES.SP500);
+    const customYears = calculateSippYearsRemaining(units, startYear, annualWithdrawal, INDEX_TYPES.SP500, {
+      sippManagementFeePercent: 0.1 // Much lower than default
+    });
+
+    // Lower management fee = funds last longer
+    expect(customYears).toBeGreaterThanOrEqual(defaultYears);
+  });
+
+  test('given_zeroManagementFee_when_calculatingYearsRemaining_then_noFeeApplied', () => {
+    const units = 100;
+    const startYear = 2020;
+    const annualWithdrawal = 10000;
+
+    const zeroFeeYears = calculateSippYearsRemaining(units, startYear, annualWithdrawal, INDEX_TYPES.SP500, {
+      sippManagementFeePercent: 0
+    });
+    const defaultYears = calculateSippYearsRemaining(units, startYear, annualWithdrawal, INDEX_TYPES.SP500);
+
+    // Zero fee should result in equal or more years
+    expect(zeroFeeYears).toBeGreaterThanOrEqual(defaultYears);
+  });
+});

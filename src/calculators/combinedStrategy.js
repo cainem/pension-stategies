@@ -58,13 +58,14 @@ const STRATEGY_TO_INDEX = {
  * @param {number} startYear - Year to start
  * @param {number} withdrawalRate - Withdrawal rate percentage
  * @param {number} years - Number of years to simulate
+ * @param {Object} [config={}] - Optional configuration overrides for fees
  * @returns {Object} Strategy result
  */
-function calculateBaseStrategy(strategyId, pensionAmount, startYear, withdrawalRate, years) {
+function calculateBaseStrategy(strategyId, pensionAmount, startYear, withdrawalRate, years, config = {}) {
   if (strategyId === 'gold') {
     return {
       type: 'gold',
-      result: calculateGoldStrategy(pensionAmount, startYear, withdrawalRate, years)
+      result: calculateGoldStrategy(pensionAmount, startYear, withdrawalRate, years, config)
     };
   }
 
@@ -75,7 +76,7 @@ function calculateBaseStrategy(strategyId, pensionAmount, startYear, withdrawalR
 
   return {
     type: 'sipp',
-    result: calculateSippStrategy(pensionAmount, startYear, withdrawalRate, years, indexType)
+    result: calculateSippStrategy(pensionAmount, startYear, withdrawalRate, years, indexType, config)
   };
 }
 
@@ -239,14 +240,24 @@ function calculateCombinedSummary(wrapperA, wrapperB, mergedYearly, totalPension
  * @param {number} startYear - Year to start the strategy
  * @param {number} withdrawalRate - Annual withdrawal rate as percentage
  * @param {number} years - Number of years to simulate
+ * @param {Object} [config={}] - Optional configuration overrides for fees
+ * @param {number} [config.goldTransactionPercent] - Gold transaction cost percentage
+ * @param {number} [config.goldStorageFeePercent] - Gold storage fee percentage
+ * @param {number} [config.sippManagementFeePercent] - SIPP management fee percentage
  * @returns {CombinedStrategyResult} Complete combined strategy results
  * @throws {Error} If inputs are invalid or combination doesn't exist
  *
  * @example
  * const result = calculateCombinedStrategy('gold-sp500', 500000, 2000, 4, 25);
  * console.log(result.summary.totalWithdrawn);
+ *
+ * // With custom fees
+ * const customResult = calculateCombinedStrategy('gold-sp500', 500000, 2000, 4, 25, {
+ *   goldTransactionPercent: 1.5,
+ *   sippManagementFeePercent: 0.3
+ * });
  */
-export function calculateCombinedStrategy(combinationId, pensionAmount, startYear, withdrawalRate, years) {
+export function calculateCombinedStrategy(combinationId, pensionAmount, startYear, withdrawalRate, years, config = {}) {
   // Validate combination exists
   const combination = COMBINATION_STRATEGIES[combinationId];
   if (!combination) {
@@ -262,8 +273,8 @@ export function calculateCombinedStrategy(combinationId, pensionAmount, startYea
 
   // Calculate each half
   const [strategyIdA, strategyIdB] = combination.components;
-  const wrapperA = calculateBaseStrategy(strategyIdA, halfPension, startYear, withdrawalRate, years);
-  const wrapperB = calculateBaseStrategy(strategyIdB, halfPension, startYear, withdrawalRate, years);
+  const wrapperA = calculateBaseStrategy(strategyIdA, halfPension, startYear, withdrawalRate, years, config);
+  const wrapperB = calculateBaseStrategy(strategyIdB, halfPension, startYear, withdrawalRate, years, config);
 
   // Extract and merge yearly data
   const yearlyA = extractYearlyData(wrapperA);
@@ -348,9 +359,10 @@ function validateInputs(pensionAmount, startYear, withdrawalRate, years, combina
  * @param {number} startYear - Year to start
  * @param {number} withdrawalRate - Withdrawal rate percentage
  * @param {number} years - Number of years
+ * @param {Object} [config={}] - Optional configuration overrides for fees
  * @returns {CombinedStrategyResult} Combined results
  */
-export function calculateCombinedStrategyByIds(strategyIdA, strategyIdB, pensionAmount, startYear, withdrawalRate, years) {
+export function calculateCombinedStrategyByIds(strategyIdA, strategyIdB, pensionAmount, startYear, withdrawalRate, years, config = {}) {
   // Build combination ID (alphabetically ordered)
   const ids = [strategyIdA, strategyIdB].sort();
   const combinationId = ids.join('-');
@@ -360,7 +372,7 @@ export function calculateCombinedStrategyByIds(strategyIdA, strategyIdB, pension
     throw new Error(`No combination strategy defined for ${strategyIdA} + ${strategyIdB}`);
   }
 
-  return calculateCombinedStrategy(combinationId, pensionAmount, startYear, withdrawalRate, years);
+  return calculateCombinedStrategy(combinationId, pensionAmount, startYear, withdrawalRate, years, config);
 }
 
 /**

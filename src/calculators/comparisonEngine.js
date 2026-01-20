@@ -37,20 +37,30 @@ import { isValidYear, isValidAmount } from '../utils/validators.js';
  * @param {number} startYear - Year to start both strategies
  * @param {number} withdrawalRate - Annual withdrawal rate as percentage
  * @param {number} years - Number of years to simulate
+ * @param {Object} [config={}] - Optional configuration overrides for fees
+ * @param {number} [config.goldTransactionPercent] - Gold transaction cost percentage
+ * @param {number} [config.goldStorageFeePercent] - Gold storage fee percentage
+ * @param {number} [config.sippManagementFeePercent] - SIPP management fee percentage
  * @returns {ComparisonResult} Complete comparison of both strategies
  * @throws {Error} If inputs are invalid
  *
  * @example
  * const comparison = compareStrategies(500000, 2000, 4, 25);
  * console.log(comparison.summary.winner);
+ *
+ * // With custom fees
+ * const customComparison = compareStrategies(500000, 2000, 4, 25, {
+ *   goldTransactionPercent: 1.5,
+ *   sippManagementFeePercent: 0.3
+ * });
  */
-export function compareStrategies(pensionAmount, startYear, withdrawalRate, years) {
+export function compareStrategies(pensionAmount, startYear, withdrawalRate, years, config = {}) {
   // Validate inputs
   validateInputs(pensionAmount, startYear, withdrawalRate, years);
 
-  // Run both strategies
-  const goldResult = calculateGoldStrategy(pensionAmount, startYear, withdrawalRate, years);
-  const sippResult = calculateSippStrategy(pensionAmount, startYear, withdrawalRate, years);
+  // Run both strategies with config
+  const goldResult = calculateGoldStrategy(pensionAmount, startYear, withdrawalRate, years, config);
+  const sippResult = calculateSippStrategy(pensionAmount, startYear, withdrawalRate, years, undefined, config);
 
   // Build year-by-year comparison
   const yearlyComparison = buildYearlyComparison(goldResult, sippResult, years);

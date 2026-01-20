@@ -386,6 +386,97 @@ describe('getGoldValue', () => {
   });
 });
 
+describe('configurable fees', () => {
+  test('given_customTransactionFee_when_calculating_then_usesCustomFee', () => {
+    const defaultResult = calculateGoldStrategy(100000, 2020, 4, 5);
+    const customResult = calculateGoldStrategy(100000, 2020, 4, 5, {
+      goldTransactionPercent: 1.0 // 1% instead of default 2%
+    });
+
+    // Custom fee result should have lower transaction costs
+    expect(customResult.summary.totalTransactionCosts)
+      .toBeLessThan(defaultResult.summary.totalTransactionCosts);
+
+    // More gold should be purchased with lower fees
+    expect(customResult.initialWithdrawal.goldOuncesPurchased)
+      .toBeGreaterThan(defaultResult.initialWithdrawal.goldOuncesPurchased);
+  });
+
+  test('given_customStorageFee_when_calculating_then_usesCustomFee', () => {
+    const defaultResult = calculateGoldStrategy(100000, 2020, 4, 5);
+    const customResult = calculateGoldStrategy(100000, 2020, 4, 5, {
+      goldStorageFeePercent: 0.3 // 0.3% instead of default 0.7%
+    });
+
+    // Custom storage fee should result in lower total storage costs
+    expect(customResult.summary.totalStorageFees)
+      .toBeLessThan(defaultResult.summary.totalStorageFees);
+  });
+
+  test('given_zeroTransactionFee_when_calculating_then_noTransactionCosts', () => {
+    const result = calculateGoldStrategy(100000, 2020, 4, 5, {
+      goldTransactionPercent: 0
+    });
+
+    // No transaction costs
+    expect(result.summary.totalTransactionCosts).toBe(0);
+  });
+
+  test('given_zeroStorageFee_when_calculating_then_noStorageCosts', () => {
+    const result = calculateGoldStrategy(100000, 2020, 4, 5, {
+      goldStorageFeePercent: 0
+    });
+
+    // No storage fees
+    expect(result.summary.totalStorageFees).toBe(0);
+  });
+
+  test('given_partialConfig_when_calculating_then_usesDefaultsForMissing', () => {
+    const customResult = calculateGoldStrategy(100000, 2020, 4, 5, {
+      goldTransactionPercent: 1.0
+      // goldStorageFeePercent not specified, should use default
+    });
+
+    // Should have storage fees (default rate applied)
+    expect(customResult.summary.totalStorageFees).toBeGreaterThan(0);
+
+    // The storage fee percentage used should match default (0.7%)
+    // Storage fees are calculated on gold value, so more gold (due to lower transaction fee) = higher storage
+    // Just verify that storage fees are reasonable (not zero, not absurdly high)
+    const avgGoldValue = (customResult.yearlyResults[0].startValueGbp +
+                          customResult.yearlyResults[4].endValueGbp) / 2;
+    const approximateStoragePercent = (customResult.summary.totalStorageFees / 5) / avgGoldValue * 100;
+    expect(approximateStoragePercent).toBeCloseTo(0.7, 0);
+  });
+
+  test('given_emptyConfig_when_calculating_then_usesAllDefaults', () => {
+    const emptyConfigResult = calculateGoldStrategy(100000, 2020, 4, 5, {});
+    const noConfigResult = calculateGoldStrategy(100000, 2020, 4, 5);
+
+    // Results should be identical
+    expect(emptyConfigResult.summary.totalTransactionCosts)
+      .toBe(noConfigResult.summary.totalTransactionCosts);
+    expect(emptyConfigResult.summary.totalStorageFees)
+      .toBe(noConfigResult.summary.totalStorageFees);
+  });
+});
+
+describe('calculateGoldYearsRemaining with config', () => {
+  test('given_customStorageFee_when_calculatingYearsRemaining_then_usesCustomFee', () => {
+    const goldOunces = 100;
+    const startYear = 2020;
+    const annualWithdrawal = 10000;
+
+    const defaultYears = calculateGoldYearsRemaining(goldOunces, startYear, annualWithdrawal);
+    const customYears = calculateGoldYearsRemaining(goldOunces, startYear, annualWithdrawal, {
+      goldStorageFeePercent: 0.1 // Much lower than default
+    });
+
+    // Lower storage fee = gold lasts longer
+    expect(customYears).toBeGreaterThanOrEqual(defaultYears);
+  });
+});
+
 describe('integration tests', () => {
   test('given_fullScenario_when_simulating_then_producesRealisticResults', () => {
     // £500,000 pension, starting 2000, 4% withdrawal, 25 years

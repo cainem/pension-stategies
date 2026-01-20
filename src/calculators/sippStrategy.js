@@ -58,6 +58,8 @@ import { COSTS } from '../config/defaults.js';
  * @param {number} withdrawalRate - Annual withdrawal rate as percentage (e.g., 4 for 4%)
  * @param {number} years - Number of years to simulate
  * @param {string} [indexType='sp500'] - Index type (sp500, nasdaq100, ftse100)
+ * @param {Object} [config={}] - Optional configuration overrides
+ * @param {number} [config.sippManagementFeePercent] - SIPP management fee percentage (default: 0.5)
  * @returns {SippStrategyResult} Complete strategy results
  * @throws {Error} If inputs are invalid
  *
@@ -70,8 +72,15 @@ import { COSTS } from '../config/defaults.js';
  *
  * // FTSE 100 SIPP
  * const ftseResult = calculateSippStrategy(500000, 2000, 4, 25, 'ftse100');
+ *
+ * // Custom management fee
+ * const customResult = calculateSippStrategy(500000, 2000, 4, 25, 'sp500', { sippManagementFeePercent: 0.3 });
  */
-export function calculateSippStrategy(pensionAmount, startYear, withdrawalRate, years, indexType = INDEX_TYPES.SP500) {
+export function calculateSippStrategy(pensionAmount, startYear, withdrawalRate, years, indexType = INDEX_TYPES.SP500, config = {}) {
+  // Merge config with defaults
+  const costs = {
+    sippManagementFeePercent: config.sippManagementFeePercent ?? COSTS.sippManagementFeePercent
+  };
   // Validate inputs
   validateInputs(pensionAmount, startYear, withdrawalRate, years, indexType);
 
@@ -85,7 +94,8 @@ export function calculateSippStrategy(pensionAmount, startYear, withdrawalRate, 
     startYear,
     annualWithdrawalGross,
     years,
-    indexType
+    indexType,
+    costs
   );
 
   // Step 3: Calculate summary
@@ -96,7 +106,7 @@ export function calculateSippStrategy(pensionAmount, startYear, withdrawalRate, 
     annualWithdrawalGross
   );
 
-  const config = INDEX_CONFIG[indexType];
+  const indexConfig = INDEX_CONFIG[indexType];
 
   return {
     initialInvestment: {
@@ -108,7 +118,7 @@ export function calculateSippStrategy(pensionAmount, startYear, withdrawalRate, 
     yearlyResults,
     summary,
     indexType,
-    indexName: config.name
+    indexName: indexConfig.name
   };
 }
 
@@ -168,10 +178,10 @@ function calculateInitialInvestment(pensionAmount, year, indexType) {
 /**
  * Calculate year-by-year withdrawals from SIPP
  */
-function calculateYearlyWithdrawals(startingUnits, startYear, annualWithdrawalGross, years, indexType) {
+function calculateYearlyWithdrawals(startingUnits, startYear, annualWithdrawalGross, years, indexType, costs) {
   const results = [];
   let currentUnits = startingUnits;
-  const managementFeeRate = COSTS.sippManagementFeePercent / 100;
+  const managementFeeRate = costs.sippManagementFeePercent / 100;
 
   for (let i = 0; i < years; i++) {
     const year = startYear + i;
@@ -294,16 +304,23 @@ function calculateSummary(pensionAmount, initialInvestment, yearlyResults, targe
  * @param {number} startYear - Starting year
  * @param {number} annualWithdrawalGross - Annual gross withdrawal amount
  * @param {string} [indexType='sp500'] - Index type (sp500, nasdaq100, ftse100)
+ * @param {Object} [config={}] - Optional configuration overrides
+ * @param {number} [config.sippManagementFeePercent] - SIPP management fee percentage (default: 0.5)
  * @returns {number} Number of years until funds exhausted
  */
-export function calculateSippYearsRemaining(units, startYear, annualWithdrawalGross, indexType = INDEX_TYPES.SP500) {
+export function calculateSippYearsRemaining(units, startYear, annualWithdrawalGross, indexType = INDEX_TYPES.SP500, config = {}) {
   if (units <= 0) return 0;
   if (annualWithdrawalGross <= 0) return Infinity;
+
+  // Merge config with defaults
+  const costs = {
+    sippManagementFeePercent: config.sippManagementFeePercent ?? COSTS.sippManagementFeePercent
+  };
 
   let currentUnits = units;
   let years = 0;
   const maxYears = 2026 - startYear + 1;
-  const managementFeeRate = COSTS.sippManagementFeePercent / 100;
+  const managementFeeRate = costs.sippManagementFeePercent / 100;
 
   for (let i = 0; i < maxYears && currentUnits > 0; i++) {
     const year = startYear + i;
