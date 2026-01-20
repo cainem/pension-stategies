@@ -62,7 +62,7 @@ describe('getSP500TotalReturn', () => {
   });
 
   it('given_invalidYear_when_gettingValue_then_throwsError', () => {
-    expect(() => getSP500TotalReturn(1999)).toThrow('S&P 500 Total Return data not available');
+    expect(() => getSP500TotalReturn(1979)).toThrow('S&P 500 Total Return data not available');
     expect(() => getSP500TotalReturn(2027)).toThrow('S&P 500 Total Return data not available');
   });
 });

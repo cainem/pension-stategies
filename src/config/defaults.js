@@ -10,7 +10,7 @@ export const DEFAULTS = {
 };
 
 export const YEAR_RANGE = {
-  min: 2000,
+  min: 1980,
   max: 2026
 };
 

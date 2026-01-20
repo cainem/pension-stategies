@@ -27,8 +27,8 @@ describe('compareStrategies', () => {
     });
 
     test('given_invalidStartYear_when_comparing_then_throwsError', () => {
-      expect(() => compareStrategies(100000, 1999, 4, 10))
-        .toThrow('Start year 1999 is outside supported range');
+      expect(() => compareStrategies(100000, 1979, 4, 10))
+        .toThrow('Start year 1979 is outside supported range');
     });
 
     test('given_invalidWithdrawalRate_when_comparing_then_throwsError', () => {

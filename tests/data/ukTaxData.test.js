@@ -121,7 +121,7 @@ describe('getTaxData', () => {
   });
 
   it('given_invalidYear_when_gettingTaxData_then_throwsError', () => {
-    expect(() => getTaxData(1999)).toThrow('UK tax data not available');
+    expect(() => getTaxData(1979)).toThrow('UK tax data not available');
     expect(() => getTaxData(2027)).toThrow('UK tax data not available');
   });
 });
@@ -133,7 +133,7 @@ describe('getPersonalAllowance', () => {
   });
 
   it('given_invalidYear_when_gettingPersonalAllowance_then_throwsError', () => {
-    expect(() => getPersonalAllowance(1999)).toThrow();
+    expect(() => getPersonalAllowance(1979)).toThrow();
   });
 });
 
@@ -149,7 +149,7 @@ describe('hasAdditionalRate', () => {
   });
 
   it('given_invalidYear_when_checkingAdditionalRate_then_throwsError', () => {
-    expect(() => hasAdditionalRate(1999)).toThrow();
+    expect(() => hasAdditionalRate(1979)).toThrow();
   });
 });
 
@@ -175,8 +175,8 @@ describe('getAvailableYears', () => {
     expect(years).toContain(2026);
   });
 
-  it('given_ukTaxData_when_gettingAvailableYears_then_has27Years', () => {
+  it('given_ukTaxData_when_gettingAvailableYears_then_has47Years', () => {
     const years = getAvailableYears();
-    expect(years).toHaveLength(27); // 2000-2026 inclusive
+    expect(years).toHaveLength(47); // 1980-2026 inclusive
   });
 });

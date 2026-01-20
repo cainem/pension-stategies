@@ -16,8 +16,8 @@ import {
 describe('calculateIncomeTax', () => {
   describe('input validation', () => {
     test('given_yearOutsideRange_when_calculating_then_throwsError', () => {
-      expect(() => calculateIncomeTax(50000, 1999)).toThrow('Year 1999 is outside supported range (2000-2026)');
-      expect(() => calculateIncomeTax(50000, 2027)).toThrow('Year 2027 is outside supported range (2000-2026)');
+      expect(() => calculateIncomeTax(50000, 1979)).toThrow('outside supported range');
+      expect(() => calculateIncomeTax(50000, 2027)).toThrow('outside supported range');
     });
 
     test('given_negativeIncome_when_calculating_then_throwsError', () => {
@@ -315,7 +315,7 @@ describe('calculateEffectiveTaxRate', () => {
 
 describe('getMarginalTaxRate', () => {
   test('given_yearOutsideRange_when_gettingRate_then_throwsError', () => {
-    expect(() => getMarginalTaxRate(50000, 1999)).toThrow('Year 1999 is outside supported range (2000-2026)');
+    expect(() => getMarginalTaxRate(50000, 1979)).toThrow('outside supported range');
   });
 
   test('given_zeroIncome_when_gettingRate_then_returnsZero', () => {
@@ -348,7 +348,7 @@ describe('getMarginalTaxRate', () => {
 
 describe('getTaxBands', () => {
   test('given_yearOutsideRange_when_gettingBands_then_throwsError', () => {
-    expect(() => getTaxBands(1999)).toThrow('Year 1999 is outside supported range (2000-2026)');
+    expect(() => getTaxBands(1979)).toThrow('outside supported range');
   });
 
   test('given_year2024_when_gettingBands_then_returnsFourBands', () => {

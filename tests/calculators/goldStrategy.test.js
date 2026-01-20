@@ -27,8 +27,8 @@ describe('calculateGoldStrategy', () => {
     });
 
     test('given_invalidStartYear_when_calculating_then_throwsError', () => {
-      expect(() => calculateGoldStrategy(100000, 1999, 4, 10))
-        .toThrow('Start year 1999 is outside supported range');
+      expect(() => calculateGoldStrategy(100000, 1979, 4, 10))
+        .toThrow('Start year 1979 is outside supported range');
     });
 
     test('given_invalidWithdrawalRate_when_calculating_then_throwsError', () => {
@@ -285,7 +285,7 @@ describe('calculateGoldYearsRemaining', () => {
 
 describe('getGoldValue', () => {
   test('given_invalidYear_when_valuing_then_throwsError', () => {
-    expect(() => getGoldValue(100, 1999)).toThrow('outside supported range');
+    expect(() => getGoldValue(100, 1979)).toThrow('outside supported range');
   });
 
   test('given_validInputs_when_valuing_then_calculatesCorrectly', () => {

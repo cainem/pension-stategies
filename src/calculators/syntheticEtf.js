@@ -12,6 +12,7 @@
 import { getSP500TotalReturn } from '../data/sp500TotalReturn.js';
 import { getExchangeRate } from '../data/exchangeRates.js';
 import { isValidYear } from '../utils/validators.js';
+import { YEAR_RANGE } from '../config/defaults.js';
 
 /**
  * Base year for synthetic ETF calculation (when VUAG was launched)
@@ -49,7 +50,7 @@ export const BASE_PRICE_GBP = 44.30;
  */
 export function getSyntheticEtfPrice(year) {
   if (!isValidYear(year)) {
-    throw new Error(`Year ${year} is outside supported range (2000-2026)`);
+    throw new Error(`Year ${year} is outside supported range (${YEAR_RANGE.min}-${YEAR_RANGE.max})`);
   }
 
   const sp500Year = getSP500TotalReturn(year);

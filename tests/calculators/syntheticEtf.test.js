@@ -21,8 +21,8 @@ import {
 describe('getSyntheticEtfPrice', () => {
   describe('input validation', () => {
     test('given_yearOutsideRange_when_gettingPrice_then_throwsError', () => {
-      expect(() => getSyntheticEtfPrice(1999)).toThrow('Year 1999 is outside supported range (2000-2026)');
-      expect(() => getSyntheticEtfPrice(2027)).toThrow('Year 2027 is outside supported range (2000-2026)');
+      expect(() => getSyntheticEtfPrice(1979)).toThrow('outside supported range');
+      expect(() => getSyntheticEtfPrice(2027)).toThrow('outside supported range');
     });
 
     test('given_nonIntegerYear_when_gettingPrice_then_throwsError', () => {

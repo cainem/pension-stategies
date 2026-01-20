@@ -60,7 +60,7 @@ describe('getExchangeRate', () => {
   });
 
   it('given_invalidYear_when_gettingRate_then_throwsError', () => {
-    expect(() => getExchangeRate(1999)).toThrow('Exchange rate data not available');
+    expect(() => getExchangeRate(1979)).toThrow('Exchange rate data not available');
     expect(() => getExchangeRate(2027)).toThrow('Exchange rate data not available');
   });
 });

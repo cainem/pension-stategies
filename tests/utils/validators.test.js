@@ -71,8 +71,8 @@ describe('validateStartYear', () => {
     expect(result.valid).toBe(true);
   });
 
-  it('given_yearBefore2000_when_validating_then_returnsError', () => {
-    const result = validateStartYear(1999);
+  it('given_yearBefore1980_when_validating_then_returnsError', () => {
+    const result = validateStartYear(1979);
     expect(result.valid).toBe(false);
     expect(result.error).toContain('cannot be before');
   });
@@ -187,7 +187,7 @@ describe('validateInputs', () => {
   it('given_multipleInvalidInputs_when_validating_then_returnsAllErrors', () => {
     const inputs = {
       pensionAmount: 5000,      // Below minimum
-      startYear: 1990,          // Before 2000
+      startYear: 1979,          // Before 1980
       withdrawalRate: 15,       // Above maximum
       comparisonYears: 3        // Below minimum
     };
@@ -232,7 +232,7 @@ describe('isValidYear', () => {
   });
 
   it('given_yearBelowRange_when_validating_then_returnsFalse', () => {
-    expect(isValidYear(1999)).toBe(false);
+    expect(isValidYear(1979)).toBe(false);
     expect(isValidYear(1900)).toBe(false);
   });
 

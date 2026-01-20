@@ -28,8 +28,8 @@ describe('calculateSippStrategy', () => {
     });
 
     test('given_invalidStartYear_when_calculating_then_throwsError', () => {
-      expect(() => calculateSippStrategy(100000, 1999, 4, 10))
-        .toThrow('Start year 1999 is outside supported range');
+      expect(() => calculateSippStrategy(100000, 1979, 4, 10))
+        .toThrow('Start year 1979 is outside supported range');
     });
 
     test('given_invalidWithdrawalRate_when_calculating_then_throwsError', () => {
@@ -279,7 +279,7 @@ describe('calculateSippYearsRemaining', () => {
 
 describe('getSippValue', () => {
   test('given_invalidYear_when_valuing_then_throwsError', () => {
-    expect(() => getSippValue(100, 1999)).toThrow('outside supported range');
+    expect(() => getSippValue(100, 1979)).toThrow('outside supported range');
   });
 
   test('given_validInputs_when_valuing_then_calculatesCorrectly', () => {
@@ -298,7 +298,7 @@ describe('getSippValue', () => {
 
 describe('calculateSippAfterTaxValue', () => {
   test('given_invalidYear_when_calculating_then_throwsError', () => {
-    expect(() => calculateSippAfterTaxValue(100000, 1999)).toThrow('outside supported range');
+    expect(() => calculateSippAfterTaxValue(100000, 1979)).toThrow('outside supported range');
   });
 
   test('given_validValue_when_calculating_then_applies25PercentTaxFree', () => {
