@@ -1072,3 +1072,124 @@ h3 { font-size: var(--font-size-xl); }
   background: var(--color-border);
 }
 
+/* ============================================
+   Disclaimers Section
+   ============================================ */
+.disclaimers-section {
+  max-width: 1400px;
+  margin: var(--spacing-xl) auto;
+  padding: 0 var(--spacing-lg);
+}
+
+.disclaimers {
+  background: var(--color-bg-card);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--color-border);
+}
+
+.disclaimers__title {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  margin-bottom: var(--spacing-md);
+  color: var(--color-text);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.disclaimers__title::before {
+  content: '📋';
+}
+
+.disclaimers__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.disclaimer {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--color-bg);
+}
+
+.disclaimer__summary {
+  padding: var(--spacing-md);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  font-weight: 500;
+  list-style: none;
+  transition: background-color 0.2s ease;
+}
+
+.disclaimer__summary::-webkit-details-marker {
+  display: none;
+}
+
+.disclaimer__summary::after {
+  content: '▸';
+  margin-left: auto;
+  transition: transform 0.2s ease;
+  color: var(--color-text-muted);
+}
+
+.disclaimer[open] .disclaimer__summary::after {
+  transform: rotate(90deg);
+}
+
+.disclaimer__summary:hover {
+  background: var(--color-bg-card);
+}
+
+.disclaimer__icon {
+  font-size: var(--font-size-lg);
+}
+
+.disclaimer__title {
+  color: var(--color-text);
+}
+
+.disclaimer__content {
+  padding: var(--spacing-md);
+  padding-top: 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Footer Disclaimers */
+.footer-disclaimer {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.footer-disclaimer p {
+  margin: 0;
+  line-height: 1.6;
+}
+
+.footer-disclaimer p + p {
+  margin-top: var(--spacing-sm);
+}
+
+.footer-disclaimer__note {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+/* Update footer styles */
+.footer {
+  background: var(--color-bg-card);
+  border-top: 1px solid var(--color-border);
+  padding: var(--spacing-lg);
+  margin-top: var(--spacing-2xl);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}

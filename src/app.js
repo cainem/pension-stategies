@@ -8,6 +8,7 @@ import { renderResultsForStrategies, clearResults, showResultsSection } from './
 import { renderSummary, clearSummary } from './components/summary.js';
 import { renderCharts, clearCharts, showChartsSection } from './components/chart.js';
 import { initAdvancedSettings, getConfig } from './components/advancedSettings.js';
+import { renderDisclaimers, initializeDisclaimers } from './components/disclaimer.js';
 import { compareStrategies, compareAnyStrategies } from './calculators/comparisonEngine.js';
 
 /**
@@ -19,6 +20,7 @@ export function initApp() {
   });
 
   initAdvancedSettings();
+  initializeDisclaimers();
 
   console.log('Pension Strategy Comparison Tool initialized');
 }
@@ -77,6 +79,15 @@ async function handleCalculation(inputs) {
 
     // Render summary
     renderSummary(comparison);
+
+    // Render strategy-specific disclaimers
+    renderDisclaimers(
+      'disclaimers-content',
+      inputs.strategy1 || 'gold',
+      inputs.strategy2 || 'sp500',
+      inputs.startYear
+    );
+    showDisclaimersSection();
 
     // Scroll to results
     scrollToResults();
@@ -138,6 +149,16 @@ function scrollToResults() {
   const resultsSection = document.querySelector('.results-section');
   if (resultsSection) {
     resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+}
+
+/**
+ * Show the disclaimers section
+ */
+function showDisclaimersSection() {
+  const section = document.getElementById('disclaimers-section');
+  if (section) {
+    section.hidden = false;
   }
 }
 
