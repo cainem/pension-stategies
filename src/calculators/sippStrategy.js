@@ -1,19 +1,24 @@
 /**
  * SIPP Strategy Calculator
  *
- * Simulates keeping pension funds invested in an S&P 500 tracker ETF
- * (like VUAG) within a SIPP wrapper.
+ * Simulates keeping pension funds invested in an equity tracker ETF
+ * within a SIPP wrapper.
+ *
+ * Supports multiple indices:
+ * - S&P 500 (VUAG equivalent)
+ * - Nasdaq 100 (EQQQ/CNDX equivalent)
+ * - FTSE 100 (VUKE equivalent)
  *
  * Key characteristics:
  * - No initial tax (stays in SIPP)
  * - 0.5% annual management fee on total balance
  * - Annual withdrawals are taxed (25% tax-free PCLS, 75% taxable)
- * - Uses synthetic VUAG price for historical consistency
+ * - Uses synthetic ETF price for historical consistency
  *
  * @module sippStrategy
  */
 
-import { getSyntheticEtfPrice, calculateUnits, calculateValue } from './syntheticEtf.js';
+import { getSyntheticPrice, INDEX_TYPES, INDEX_CONFIG } from './syntheticEtf.js';
 import { calculateIncomeTax } from './taxCalculator.js';
 import { isValidYear, isValidAmount } from '../utils/validators.js';
 import { COSTS } from '../config/defaults.js';
@@ -42,28 +47,36 @@ import { COSTS } from '../config/defaults.js';
  * @property {Object} initialInvestment - Details of initial SIPP investment
  * @property {SippYearResult[]} yearlyResults - Year-by-year breakdown
  * @property {Object} summary - Summary statistics
+ * @property {string} indexType - The index type used for this strategy
  */
 
 /**
- * Calculate the SIPP strategy outcome
+ * Calculate the SIPP strategy outcome for any supported index
  *
  * @param {number} pensionAmount - Starting pension pot in GBP
  * @param {number} startYear - Year to start the strategy
  * @param {number} withdrawalRate - Annual withdrawal rate as percentage (e.g., 4 for 4%)
  * @param {number} years - Number of years to simulate
+ * @param {string} [indexType='sp500'] - Index type (sp500, nasdaq100, ftse100)
  * @returns {SippStrategyResult} Complete strategy results
  * @throws {Error} If inputs are invalid
  *
  * @example
- * const result = calculateSippStrategy(500000, 2000, 4, 25);
- * console.log(result.summary.totalWithdrawn);
+ * // S&P 500 SIPP (default)
+ * const sp500Result = calculateSippStrategy(500000, 2000, 4, 25);
+ *
+ * // Nasdaq 100 SIPP
+ * const nasdaqResult = calculateSippStrategy(500000, 2000, 4, 25, 'nasdaq100');
+ *
+ * // FTSE 100 SIPP
+ * const ftseResult = calculateSippStrategy(500000, 2000, 4, 25, 'ftse100');
  */
-export function calculateSippStrategy(pensionAmount, startYear, withdrawalRate, years) {
+export function calculateSippStrategy(pensionAmount, startYear, withdrawalRate, years, indexType = INDEX_TYPES.SP500) {
   // Validate inputs
-  validateInputs(pensionAmount, startYear, withdrawalRate, years);
+  validateInputs(pensionAmount, startYear, withdrawalRate, years, indexType);
 
   // Step 1: Initial investment (no tax - stays in SIPP)
-  const initialInvestment = calculateInitialInvestment(pensionAmount, startYear);
+  const initialInvestment = calculateInitialInvestment(pensionAmount, startYear, indexType);
 
   // Step 2: Calculate annual withdrawals
   const annualWithdrawalGross = pensionAmount * (withdrawalRate / 100);
@@ -71,7 +84,8 @@ export function calculateSippStrategy(pensionAmount, startYear, withdrawalRate, 
     initialInvestment.units,
     startYear,
     annualWithdrawalGross,
-    years
+    years,
+    indexType
   );
 
   // Step 3: Calculate summary
@@ -82,6 +96,8 @@ export function calculateSippStrategy(pensionAmount, startYear, withdrawalRate, 
     annualWithdrawalGross
   );
 
+  const config = INDEX_CONFIG[indexType];
+
   return {
     initialInvestment: {
       pensionAmount,
@@ -90,20 +106,34 @@ export function calculateSippStrategy(pensionAmount, startYear, withdrawalRate, 
       initialValue: initialInvestment.value
     },
     yearlyResults,
-    summary
+    summary,
+    indexType,
+    indexName: config.name
   };
 }
 
 /**
  * Validate all inputs
  */
-function validateInputs(pensionAmount, startYear, withdrawalRate, years) {
+function validateInputs(pensionAmount, startYear, withdrawalRate, years, indexType) {
   if (!isValidAmount(pensionAmount) || pensionAmount <= 0) {
     throw new Error('Pension amount must be a positive number');
   }
 
   if (!isValidYear(startYear)) {
-    throw new Error(`Start year ${startYear} is outside supported range (2000-2026)`);
+    throw new Error(`Start year ${startYear} is outside supported range (1980-2026)`);
+  }
+
+  // Validate index type
+  const config = INDEX_CONFIG[indexType];
+  if (!config) {
+    const validTypes = Object.keys(INDEX_CONFIG).join(', ');
+    throw new Error(`Unknown index type: ${indexType}. Valid types: ${validTypes}`);
+  }
+
+  // Check if index data is available for start year
+  if (startYear < config.earliestYear) {
+    throw new Error(`${config.name} data not available for year ${startYear}. Earliest available: ${config.earliestYear}`);
   }
 
   if (typeof withdrawalRate !== 'number' || withdrawalRate <= 0 || withdrawalRate > 100) {
@@ -124,9 +154,9 @@ function validateInputs(pensionAmount, startYear, withdrawalRate, years) {
 /**
  * Calculate the initial SIPP investment (no tax)
  */
-function calculateInitialInvestment(pensionAmount, year) {
-  const pricePerUnit = getSyntheticEtfPrice(year);
-  const units = calculateUnits(pensionAmount, year);
+function calculateInitialInvestment(pensionAmount, year, indexType) {
+  const pricePerUnit = getSyntheticPrice(year, indexType);
+  const units = pensionAmount / pricePerUnit;
 
   return {
     pricePerUnit,
@@ -138,14 +168,14 @@ function calculateInitialInvestment(pensionAmount, year) {
 /**
  * Calculate year-by-year withdrawals from SIPP
  */
-function calculateYearlyWithdrawals(startingUnits, startYear, annualWithdrawalGross, years) {
+function calculateYearlyWithdrawals(startingUnits, startYear, annualWithdrawalGross, years, indexType) {
   const results = [];
   let currentUnits = startingUnits;
   const managementFeeRate = COSTS.sippManagementFeePercent / 100;
 
   for (let i = 0; i < years; i++) {
     const year = startYear + i;
-    const etfPrice = getSyntheticEtfPrice(year);
+    const etfPrice = getSyntheticPrice(year, indexType);
     const startValue = currentUnits * etfPrice;
 
     // Apply management fee first
@@ -263,9 +293,10 @@ function calculateSummary(pensionAmount, initialInvestment, yearlyResults, targe
  * @param {number} units - Starting ETF units
  * @param {number} startYear - Starting year
  * @param {number} annualWithdrawalGross - Annual gross withdrawal amount
+ * @param {string} [indexType='sp500'] - Index type (sp500, nasdaq100, ftse100)
  * @returns {number} Number of years until funds exhausted
  */
-export function calculateSippYearsRemaining(units, startYear, annualWithdrawalGross) {
+export function calculateSippYearsRemaining(units, startYear, annualWithdrawalGross, indexType = INDEX_TYPES.SP500) {
   if (units <= 0) return 0;
   if (annualWithdrawalGross <= 0) return Infinity;
 
@@ -278,7 +309,7 @@ export function calculateSippYearsRemaining(units, startYear, annualWithdrawalGr
     const year = startYear + i;
     if (year > 2026) break;
 
-    const etfPrice = getSyntheticEtfPrice(year);
+    const etfPrice = getSyntheticPrice(year, indexType);
     const startValue = currentUnits * etfPrice;
 
     // Apply management fee
@@ -310,14 +341,16 @@ export function calculateSippYearsRemaining(units, startYear, annualWithdrawalGr
  *
  * @param {number} units - Number of ETF units
  * @param {number} year - Year to value at
+ * @param {string} [indexType='sp500'] - Index type (sp500, nasdaq100, ftse100)
  * @returns {number} Value in GBP
  */
-export function getSippValue(units, year) {
+export function getSippValue(units, year, indexType = INDEX_TYPES.SP500) {
   if (!isValidYear(year)) {
-    throw new Error(`Year ${year} is outside supported range (2000-2026)`);
+    throw new Error(`Year ${year} is outside supported range (1980-2026)`);
   }
 
-  return calculateValue(units, year);
+  const price = getSyntheticPrice(year, indexType);
+  return units * price;
 }
 
 /**
@@ -343,9 +376,41 @@ export function calculateSippAfterTaxValue(grossValue, year) {
   };
 }
 
+/**
+ * Convenience functions for specific index types
+ */
+
+/**
+ * Calculate S&P 500 SIPP strategy (default behavior)
+ */
+export function calculateSP500SippStrategy(pensionAmount, startYear, withdrawalRate, years) {
+  return calculateSippStrategy(pensionAmount, startYear, withdrawalRate, years, INDEX_TYPES.SP500);
+}
+
+/**
+ * Calculate Nasdaq 100 SIPP strategy
+ */
+export function calculateNasdaq100SippStrategy(pensionAmount, startYear, withdrawalRate, years) {
+  return calculateSippStrategy(pensionAmount, startYear, withdrawalRate, years, INDEX_TYPES.NASDAQ100);
+}
+
+/**
+ * Calculate FTSE 100 SIPP strategy
+ */
+export function calculateFTSE100SippStrategy(pensionAmount, startYear, withdrawalRate, years) {
+  return calculateSippStrategy(pensionAmount, startYear, withdrawalRate, years, INDEX_TYPES.FTSE100);
+}
+
+// Re-export INDEX_TYPES for convenience
+export { INDEX_TYPES };
+
 export default {
   calculateSippStrategy,
+  calculateSP500SippStrategy,
+  calculateNasdaq100SippStrategy,
+  calculateFTSE100SippStrategy,
   calculateSippYearsRemaining,
   getSippValue,
-  calculateSippAfterTaxValue
+  calculateSippAfterTaxValue,
+  INDEX_TYPES
 };

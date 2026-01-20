@@ -29,10 +29,11 @@ export const LIMITS = {
   }
 };
 
-// Transaction costs
+// Transaction costs and fees
 export const COSTS = {
-  goldTransactionPercent: 2,      // 2% buy/sell cost for gold
-  sippManagementFeePercent: 0.5   // 0.5% annual management fee
+  goldTransactionPercent: 2,       // 2% buy/sell cost for gold
+  goldStorageFeePercent: 0.7,      // 0.7% annual storage fee for gold
+  sippManagementFeePercent: 0.5    // 0.5% annual management fee
 };
 
 // Pension rules
