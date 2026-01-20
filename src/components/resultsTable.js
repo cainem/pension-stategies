@@ -109,8 +109,8 @@ function updateTableColumnHeaders(slot, strategyData) {
       <th scope="col">Year</th>
       <th scope="col">${nameA} Value</th>
       <th scope="col">${nameB} Value</th>
-      <th scope="col">-</th>
-      <th scope="col">-</th>
+      <th scope="col">Withdrawal</th>
+      <th scope="col">Fees + Tax</th>
       <th scope="col">Net Received</th>
       <th scope="col">Combined Value</th>
     `;
@@ -349,13 +349,16 @@ function renderCombinedTableContent(tbody, yearlyResults) {
     const valueA = getSubStrategyValue(year.strategyA);
     const valueB = getSubStrategyValue(year.strategyB);
 
+    // Calculate gross withdrawal and fees from both sub-strategies
+    const { grossWithdrawal, totalFees } = getCombinedWithdrawalInfo(year.strategyA, year.strategyB);
+
     return `
       <tr class="${getStatusClass(year.status)}">
         <td>${year.year}</td>
         <td>${formatCurrency(valueA)}</td>
         <td>${formatCurrency(valueB)}</td>
-        <td>-</td>
-        <td>-</td>
+        <td>${formatCurrency(grossWithdrawal)}</td>
+        <td class="negative">${formatCurrency(totalFees)}</td>
         <td>${formatCurrency(year.combinedWithdrawal)}</td>
         <td class="highlight-cell">${formatCurrency(year.combinedEndValue)}</td>
       </tr>
@@ -370,6 +373,42 @@ function getSubStrategyValue(yearData) {
   if (!yearData) return 0;
   // Gold uses endValueGbp, SIPP uses endValueGbp
   return yearData.endValueGbp || 0;
+}
+
+/**
+ * Get combined withdrawal and fees info from sub-strategies
+ */
+function getCombinedWithdrawalInfo(strategyA, strategyB) {
+  let grossWithdrawal = 0;
+  let totalFees = 0;
+
+  // Strategy A (could be gold or SIPP)
+  if (strategyA) {
+    if (strategyA.withdrawalGross !== undefined) {
+      // Gold strategy
+      grossWithdrawal += strategyA.withdrawalGross || 0;
+      totalFees += (strategyA.transactionCost || 0) + (strategyA.storageFee || 0);
+    } else {
+      // SIPP strategy
+      grossWithdrawal += strategyA.grossWithdrawal || 0;
+      totalFees += (strategyA.managementFee || 0) + (strategyA.taxOnWithdrawal || 0);
+    }
+  }
+
+  // Strategy B (could be gold or SIPP)
+  if (strategyB) {
+    if (strategyB.withdrawalGross !== undefined) {
+      // Gold strategy
+      grossWithdrawal += strategyB.withdrawalGross || 0;
+      totalFees += (strategyB.transactionCost || 0) + (strategyB.storageFee || 0);
+    } else {
+      // SIPP strategy
+      grossWithdrawal += strategyB.grossWithdrawal || 0;
+      totalFees += (strategyB.managementFee || 0) + (strategyB.taxOnWithdrawal || 0);
+    }
+  }
+
+  return { grossWithdrawal, totalFees };
 }
 
 /**
