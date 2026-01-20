@@ -1,16 +1,34 @@
 # Pension Strategy Comparison Tool
 
-Compare UK pension withdrawal strategies: **Gold vs S&P 500 SIPP**
+Compare UK pension withdrawal strategies across multiple asset classes.
 
-A client-side web application that helps you understand the trade-offs between:
-1. **Gold Strategy**: Withdraw pension, pay tax, buy physical gold
-2. **S&P 500 SIPP Strategy**: Keep pension invested in an S&P 500 tracker ETF
+A client-side web application that helps you understand the trade-offs between different pension strategies, including physical gold, gold ETFs, and various stock market indices.
+
+## Strategies Available
+
+### Base Strategies (5)
+1. **Physical Gold - Outside Pension**: Withdraw pension, pay tax, buy CGT-exempt physical gold
+2. **Gold ETF SIPP**: Keep pension in gold ETF within SIPP wrapper
+3. **S&P 500 SIPP**: Keep pension in S&P 500 tracker ETF within SIPP
+4. **Nasdaq 100 SIPP**: Keep pension in Nasdaq 100 tracker ETF within SIPP
+5. **FTSE 100 SIPP**: Keep pension in FTSE 100 tracker ETF within SIPP
+
+### Combined Strategies (10)
+- 50/50 splits between any two base strategies
 
 ## Features
 
-- Year-by-year comparison of both strategies
-- Accurate UK tax calculations (2000-2025)
-- Configurable pension amount, withdrawal rate, and time period
+- Compare any two strategies side-by-side
+- Year-by-year comparison with detailed breakdowns
+- Accurate UK tax calculations (1980-2026)
+- Configurable parameters:
+  - Starting pension amount
+  - Annual withdrawal rate (1-10%)
+  - Start year (1980-2001)
+  - Comparison period (5-30 years)
+  - Transaction costs and fees
+- Interactive charts showing portfolio value over time
+- Dynamic disclaimers based on selected strategies
 - No server required - runs entirely in your browser
 
 ## Getting Started
@@ -43,12 +61,6 @@ npm test
 # Run tests with coverage
 npm run test:coverage
 
-# Lint code
-npm run lint
-
-# Fix lint issues
-npm run lint:fix
-
 # Build for production
 npm run build
 
@@ -64,11 +76,32 @@ src/
 ├── app.js               # Main orchestration
 ├── config/
 │   └── defaults.js      # Default configuration values
-├── calculators/         # Calculation logic (tax, strategies)
-├── components/          # UI components
-├── data/                # Historical data (prices, tax rates)
-└── utils/               # Utility functions
-tests/                   # Test files (mirrors src/ structure)
+├── calculators/
+│   ├── taxCalculator.js      # UK income tax calculations
+│   ├── goldStrategy.js       # Physical gold strategy
+│   ├── sippStrategy.js       # SIPP-based strategies
+│   ├── syntheticEtf.js       # Historical ETF pricing
+│   ├── strategyRegistry.js   # Strategy definitions
+│   ├── combinedStrategy.js   # 50/50 split strategies
+│   └── comparisonEngine.js   # Strategy comparison logic
+├── components/
+│   ├── inputForm.js          # User input form
+│   ├── resultsTable.js       # Results display
+│   ├── summary.js            # Comparison summary
+│   ├── chart.js              # Performance charts
+│   ├── disclaimer.js         # Legal disclaimers
+│   └── advancedSettings.js   # Fee configuration
+├── data/
+│   ├── goldPrices.js         # Historical gold prices (1980-2026)
+│   ├── sp500TotalReturn.js   # S&P 500 Total Return Index
+│   ├── nasdaq100TotalReturn.js # Nasdaq 100 Total Return Index
+│   ├── ftse100TotalReturn.js # FTSE 100 Total Return Index
+│   ├── exchangeRates.js      # GBP/USD exchange rates
+│   └── ukTaxData.js          # UK tax rates and bands
+└── utils/
+    ├── formatters.js         # Currency/number formatting
+    └── validators.js         # Input validation
+tests/                        # Test files (mirrors src/ structure)
 ```
 
 ## Documentation
@@ -77,9 +110,27 @@ tests/                   # Test files (mirrors src/ structure)
 - [Implementation Plan](implementation_plan.md) - Development stages and timeline
 - [AGENTS.md](AGENTS.md) - Guidelines for AI agents working on this codebase
 
+## Test Coverage
+
+| Area | Coverage |
+|------|----------|
+| Calculators | 98% statements, 91% branch |
+| Data modules | 100% |
+| Utils | 100% |
+| Config | 100% |
+
+Run `npm run test:coverage` for detailed coverage report.
+
 ## Disclaimer
 
-This tool is for **educational purposes only**. It does not constitute financial advice. Past performance does not guarantee future results. Always consult a qualified financial advisor before making pension decisions.
+This tool is for **educational purposes only**. It does not constitute financial advice. Past performance does not guarantee future results. 
+
+Key assumptions:
+- Pre-2015 comparisons are illustrative only (pension freedom rules didn't exist before April 2015)
+- Tax calculations assume pension withdrawal is your only income
+- Physical gold assumed to be CGT-exempt UK legal tender coins
+
+Always consult a qualified financial advisor before making pension decisions.
 
 ## License
 
