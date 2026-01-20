@@ -8,6 +8,17 @@
  */
 
 import { DEFAULTS, YEAR_RANGE } from '../config/defaults.js';
+import {
+  BASE_STRATEGIES,
+  COMBINATION_STRATEGIES,
+  getStrategy
+} from '../calculators/strategyRegistry.js';
+
+/**
+ * Default strategy selections
+ */
+const DEFAULT_STRATEGY_1 = 'gold';
+const DEFAULT_STRATEGY_2 = 'sp500';
 
 /**
  * Initialize the input form
@@ -16,10 +27,142 @@ import { DEFAULTS, YEAR_RANGE } from '../config/defaults.js';
  * @param {Function} options.onSubmit - Callback when form is submitted with valid data
  */
 export function initInputForm({ onSubmit }) {
+  populateStrategyDropdowns();
   populateYearDropdown();
+  setupStrategyChangeHandlers();
   setupYearChangeHandler();
   setupFormHandler(onSubmit);
   setDefaultValues();
+}
+
+/**
+ * Populate both strategy dropdowns with grouped options
+ */
+function populateStrategyDropdowns() {
+  const strategy1Select = document.getElementById('strategy-1');
+  const strategy2Select = document.getElementById('strategy-2');
+
+  if (!strategy1Select || !strategy2Select) return;
+
+  const optionsHtml = buildStrategyOptionsHtml();
+
+  strategy1Select.innerHTML = optionsHtml;
+  strategy2Select.innerHTML = optionsHtml;
+
+  // Set defaults
+  strategy1Select.value = DEFAULT_STRATEGY_1;
+  strategy2Select.value = DEFAULT_STRATEGY_2;
+}
+
+/**
+ * Build HTML for strategy dropdown options with optgroups
+ * @returns {string} HTML string for options
+ */
+function buildStrategyOptionsHtml() {
+  let html = '';
+
+  // Base Strategies group
+  html += '<optgroup label="Base Strategies">';
+  Object.values(BASE_STRATEGIES).forEach(strategy => {
+    html += `<option value="${strategy.id}">${strategy.name}</option>`;
+  });
+  html += '</optgroup>';
+
+  // Combined Strategies group
+  html += '<optgroup label="Combined (50/50)">';
+  Object.values(COMBINATION_STRATEGIES).forEach(strategy => {
+    html += `<option value="${strategy.id}">${strategy.name}</option>`;
+  });
+  html += '</optgroup>';
+
+  return html;
+}
+
+/**
+ * Set up handlers for strategy selection changes
+ */
+function setupStrategyChangeHandlers() {
+  const strategy1Select = document.getElementById('strategy-1');
+  const strategy2Select = document.getElementById('strategy-2');
+
+  if (!strategy1Select || !strategy2Select) return;
+
+  const handleStrategyChange = () => {
+    updateYearConstraints();
+    highlightDuplicateStrategies();
+  };
+
+  strategy1Select.addEventListener('change', handleStrategyChange);
+  strategy2Select.addEventListener('change', handleStrategyChange);
+
+  // Initial update
+  handleStrategyChange();
+}
+
+/**
+ * Update year dropdown based on selected strategies' earliest years
+ */
+function updateYearConstraints() {
+  const strategy1Id = document.getElementById('strategy-1')?.value;
+  const strategy2Id = document.getElementById('strategy-2')?.value;
+  const startYearSelect = document.getElementById('start-year');
+  const noticeEl = document.getElementById('year-constraint-notice');
+
+  if (!strategy1Id || !strategy2Id || !startYearSelect) return;
+
+  const strategy1 = getStrategy(strategy1Id);
+  const strategy2 = getStrategy(strategy2Id);
+
+  // Get the maximum earliest year (most restrictive)
+  const earliestYear = Math.max(strategy1.earliestYear, strategy2.earliestYear);
+  const currentValue = parseInt(startYearSelect.value, 10);
+
+  // Update dropdown options
+  startYearSelect.innerHTML = '';
+  for (let year = earliestYear; year <= YEAR_RANGE.max; year++) {
+    const option = document.createElement('option');
+    option.value = year;
+    option.textContent = year;
+    startYearSelect.appendChild(option);
+  }
+
+  // Preserve selection if valid, otherwise default to earliest
+  if (currentValue >= earliestYear && currentValue <= YEAR_RANGE.max) {
+    startYearSelect.value = currentValue;
+  } else {
+    startYearSelect.value = Math.max(earliestYear, DEFAULTS.startYear);
+  }
+
+  // Show notice if year range is restricted
+  if (noticeEl) {
+    if (earliestYear > YEAR_RANGE.min) {
+      const limitingStrategy = strategy1.earliestYear >= strategy2.earliestYear
+        ? strategy1.shortName
+        : strategy2.shortName;
+      noticeEl.textContent = `Note: ${limitingStrategy} data available from ${earliestYear}`;
+      noticeEl.hidden = false;
+    } else {
+      noticeEl.hidden = true;
+    }
+  }
+
+  // Trigger year change to update comparison years
+  startYearSelect.dispatchEvent(new Event('change'));
+}
+
+/**
+ * Highlight if same strategy is selected for both dropdowns
+ */
+function highlightDuplicateStrategies() {
+  const strategy1Select = document.getElementById('strategy-1');
+  const strategy2Select = document.getElementById('strategy-2');
+
+  if (!strategy1Select || !strategy2Select) return;
+
+  const isDuplicate = strategy1Select.value === strategy2Select.value;
+
+  strategy1Select.classList.toggle('input-warning', isDuplicate);
+  strategy2Select.classList.toggle('input-warning', isDuplicate);
 }
 
 /**
@@ -29,7 +172,7 @@ function populateYearDropdown() {
   const select = document.getElementById('start-year');
   if (!select) return;
 
-  // Clear existing options
+  // Initial population with full range - will be constrained by strategy selection
   select.innerHTML = '';
 
   for (let year = YEAR_RANGE.min; year <= YEAR_RANGE.max; year++) {
@@ -118,6 +261,8 @@ export function getFormInputs() {
   const formData = new FormData(form);
 
   return {
+    strategy1: formData.get('strategy1'),
+    strategy2: formData.get('strategy2'),
     pensionAmount: parseFloat(formData.get('pensionAmount')),
     startYear: parseInt(formData.get('startYear'), 10),
     withdrawalRate: parseFloat(formData.get('withdrawalRate')),
@@ -133,6 +278,34 @@ export function getFormInputs() {
  */
 function validateFormInputs(inputs) {
   const errors = [];
+
+  // Strategy validation
+  if (!inputs.strategy1) {
+    errors.push('Please select Strategy 1');
+  }
+
+  if (!inputs.strategy2) {
+    errors.push('Please select Strategy 2');
+  }
+
+  if (inputs.strategy1 && inputs.strategy2 && inputs.strategy1 === inputs.strategy2) {
+    errors.push('Please select two different strategies to compare');
+  }
+
+  // Validate start year against strategy constraints
+  if (inputs.strategy1 && inputs.strategy2 && inputs.startYear) {
+    try {
+      const strategy1 = getStrategy(inputs.strategy1);
+      const strategy2 = getStrategy(inputs.strategy2);
+      const earliestYear = Math.max(strategy1.earliestYear, strategy2.earliestYear);
+
+      if (inputs.startYear < earliestYear) {
+        errors.push(`Start year must be ${earliestYear} or later for selected strategies`);
+      }
+    } catch {
+      errors.push('Invalid strategy selection');
+    }
+  }
 
   if (!inputs.pensionAmount || inputs.pensionAmount < 10000) {
     errors.push('Pension amount must be at least £10,000');

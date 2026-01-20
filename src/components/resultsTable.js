@@ -7,39 +7,68 @@
  */
 
 import { formatCurrency, formatNumber, formatPercent } from '../utils/formatters.js';
+import { STRATEGY_TYPES } from '../calculators/strategyRegistry.js';
 
 /**
- * Render the Gold strategy results
+ * Render results for any two strategies (new generic format)
  *
- * @param {Object} goldResult - Gold strategy calculation result
+ * @param {Object} comparison - Generic comparison result
  */
-export function renderGoldResults(goldResult) {
-  renderGoldInitialSummary(goldResult);
-  renderGoldTable(goldResult.yearlyResults);
+export function renderResultsForStrategies(comparison) {
+  const { strategy1, strategy2 } = comparison;
+
+  // Update table headers with strategy names
+  updateTableHeaders(strategy1.shortName, strategy2.shortName);
+
+  // Render initial summaries
+  renderGenericInitialSummary('strategy1', strategy1);
+  renderGenericInitialSummary('strategy2', strategy2);
+
+  // Render yearly tables
+  renderGenericTable('strategy1', strategy1);
+  renderGenericTable('strategy2', strategy2);
 }
 
 /**
- * Render the SIPP strategy results
- *
- * @param {Object} sippResult - SIPP strategy calculation result
+ * Update table headers with strategy names
  */
-export function renderSippResults(sippResult) {
-  renderSippInitialSummary(sippResult);
-  renderSippTable(sippResult.yearlyResults);
+function updateTableHeaders(name1, name2) {
+  const header1 = document.querySelector('#strategy1-section h3, #gold-section h3');
+  const header2 = document.querySelector('#strategy2-section h3, #sipp-section h3');
+
+  if (header1) header1.textContent = `${name1} Strategy Results`;
+  if (header2) header2.textContent = `${name2} Strategy Results`;
 }
 
 /**
- * Render Gold initial investment summary
+ * Render initial summary for any strategy type
  */
-function renderGoldInitialSummary(result) {
-  const container = document.getElementById('gold-initial');
+function renderGenericInitialSummary(slot, strategyData) {
+  // Map slot to container ID (support both old and new HTML)
+  const containerId = slot === 'strategy1' ? 'gold-initial' : 'sipp-initial';
+  const container = document.getElementById(containerId);
   if (!container) return;
 
+  const { type, result, shortName } = strategyData;
+
+  if (type === STRATEGY_TYPES.GOLD) {
+    renderGoldInitialSummaryContent(container, result, shortName);
+  } else if (type === STRATEGY_TYPES.SIPP) {
+    renderSippInitialSummaryContent(container, result, shortName);
+  } else if (type === STRATEGY_TYPES.COMBINED) {
+    renderCombinedInitialSummaryContent(container, result, shortName);
+  }
+}
+
+/**
+ * Render Gold initial summary content
+ */
+function renderGoldInitialSummaryContent(container, result, shortName) {
   const { initialWithdrawal } = result;
 
   container.innerHTML = `
     <div class="initial-summary-card gold-theme">
-      <h4>Initial Withdrawal</h4>
+      <h4>${shortName} - Initial Withdrawal</h4>
       <dl class="summary-list">
         <div class="summary-item">
           <dt>Gross Pension</dt>
@@ -67,17 +96,14 @@ function renderGoldInitialSummary(result) {
 }
 
 /**
- * Render SIPP initial investment summary
+ * Render SIPP initial summary content
  */
-function renderSippInitialSummary(result) {
-  const container = document.getElementById('sipp-initial');
-  if (!container) return;
-
+function renderSippInitialSummaryContent(container, result, shortName) {
   const { initialInvestment } = result;
 
   container.innerHTML = `
     <div class="initial-summary-card sipp-theme">
-      <h4>Initial Investment</h4>
+      <h4>${shortName} - Initial Investment</h4>
       <dl class="summary-list">
         <div class="summary-item">
           <dt>Pension Amount</dt>
@@ -105,12 +131,60 @@ function renderSippInitialSummary(result) {
 }
 
 /**
- * Render Gold strategy yearly table
+ * Render Combined strategy initial summary content
  */
-function renderGoldTable(yearlyResults) {
-  const tbody = document.querySelector('#gold-table tbody');
+function renderCombinedInitialSummaryContent(container, result, shortName) {
+  const { strategyA, strategyB, summary } = result;
+
+  container.innerHTML = `
+    <div class="initial-summary-card combined-theme">
+      <h4>${shortName} - Initial Split</h4>
+      <dl class="summary-list">
+        <div class="summary-item">
+          <dt>Total Pension</dt>
+          <dd>${formatCurrency(summary.initialPension)}</dd>
+        </div>
+        <div class="summary-item">
+          <dt>${strategyA.name || 'Strategy A'} (50%)</dt>
+          <dd>${formatCurrency(summary.initialPension / 2)}</dd>
+        </div>
+        <div class="summary-item">
+          <dt>${strategyB.name || 'Strategy B'} (50%)</dt>
+          <dd>${formatCurrency(summary.initialPension / 2)}</dd>
+        </div>
+        <div class="summary-item highlight">
+          <dt>Combined Starting Value</dt>
+          <dd>${formatCurrency(summary.initialValue || summary.initialPension)}</dd>
+        </div>
+      </dl>
+    </div>
+  `;
+}
+
+/**
+ * Render yearly table for any strategy type
+ */
+function renderGenericTable(slot, strategyData) {
+  // Map slot to table ID (support both old and new HTML)
+  const tableId = slot === 'strategy1' ? 'gold-table' : 'sipp-table';
+  const tbody = document.querySelector(`#${tableId} tbody`);
   if (!tbody) return;
 
+  const { type, result } = strategyData;
+
+  if (type === STRATEGY_TYPES.GOLD) {
+    renderGoldTableContent(tbody, result.yearlyResults);
+  } else if (type === STRATEGY_TYPES.SIPP) {
+    renderSippTableContent(tbody, result.yearlyResults);
+  } else if (type === STRATEGY_TYPES.COMBINED) {
+    renderCombinedTableContent(tbody, result.yearlyResults);
+  }
+}
+
+/**
+ * Render Gold table content
+ */
+function renderGoldTableContent(tbody, yearlyResults) {
   tbody.innerHTML = yearlyResults.map(year => `
     <tr class="${getStatusClass(year.status)}">
       <td>${year.year}</td>
@@ -125,12 +199,9 @@ function renderGoldTable(yearlyResults) {
 }
 
 /**
- * Render SIPP strategy yearly table
+ * Render SIPP table content
  */
-function renderSippTable(yearlyResults) {
-  const tbody = document.querySelector('#sipp-table tbody');
-  if (!tbody) return;
-
+function renderSippTableContent(tbody, yearlyResults) {
   tbody.innerHTML = yearlyResults.map(year => {
     const totalCosts = year.managementFee + year.taxOnWithdrawal;
 
@@ -149,6 +220,23 @@ function renderSippTable(yearlyResults) {
 }
 
 /**
+ * Render Combined strategy table content
+ */
+function renderCombinedTableContent(tbody, yearlyResults) {
+  tbody.innerHTML = yearlyResults.map(year => `
+    <tr class="${getStatusClass(year.status)}">
+      <td>${year.year}</td>
+      <td>-</td>
+      <td>-</td>
+      <td>-</td>
+      <td>-</td>
+      <td>${formatCurrency(year.combinedWithdrawal)}</td>
+      <td class="highlight-cell">${formatCurrency(year.combinedEndValue)}</td>
+    </tr>
+  `).join('');
+}
+
+/**
  * Get CSS class for row based on status
  */
 function getStatusClass(status) {
@@ -159,6 +247,38 @@ function getStatusClass(status) {
       return 'status-exhausted';
     default:
       return '';
+  }
+}
+
+/**
+ * Render the Gold strategy results (legacy function for backward compatibility)
+ *
+ * @param {Object} goldResult - Gold strategy calculation result
+ */
+export function renderGoldResults(goldResult) {
+  const container = document.getElementById('gold-initial');
+  if (container) {
+    renderGoldInitialSummaryContent(container, goldResult, 'Gold');
+  }
+  const tbody = document.querySelector('#gold-table tbody');
+  if (tbody) {
+    renderGoldTableContent(tbody, goldResult.yearlyResults);
+  }
+}
+
+/**
+ * Render the SIPP strategy results (legacy function for backward compatibility)
+ *
+ * @param {Object} sippResult - SIPP strategy calculation result
+ */
+export function renderSippResults(sippResult) {
+  const container = document.getElementById('sipp-initial');
+  if (container) {
+    renderSippInitialSummaryContent(container, sippResult, 'S&P 500');
+  }
+  const tbody = document.querySelector('#sipp-table tbody');
+  if (tbody) {
+    renderSippTableContent(tbody, sippResult.yearlyResults);
   }
 }
 
@@ -188,6 +308,7 @@ export function showResultsSection() {
 }
 
 export default {
+  renderResultsForStrategies,
   renderGoldResults,
   renderSippResults,
   clearResults,

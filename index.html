@@ -17,6 +17,26 @@
     <section class="input-section" aria-labelledby="input-heading">
       <h2 id="input-heading" class="visually-hidden">Configuration</h2>
       <form id="strategy-form" class="strategy-form">
+        <div class="form-row form-row--strategies">
+          <div class="form-group">
+            <label for="strategy-1">Strategy 1</label>
+            <select id="strategy-1" name="strategy1" required>
+              <!-- Populated by JavaScript -->
+            </select>
+          </div>
+
+          <div class="form-group form-group--vs">
+            <span class="vs-label">vs</span>
+          </div>
+
+          <div class="form-group">
+            <label for="strategy-2">Strategy 2</label>
+            <select id="strategy-2" name="strategy2" required>
+              <!-- Populated by JavaScript -->
+            </select>
+          </div>
+        </div>
+
         <div class="form-group">
           <label for="pension-amount">Starting Pension Amount (£)</label>
           <input
@@ -36,6 +56,7 @@
           <select id="start-year" name="startYear" required>
             <!-- Populated by JavaScript -->
           </select>
+          <span id="year-constraint-notice" class="form-notice" hidden></span>
         </div>
 
         <div class="form-group">

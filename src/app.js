@@ -4,11 +4,11 @@
  */
 
 import { initInputForm, disableForm, enableForm } from './components/inputForm.js';
-import { renderGoldResults, renderSippResults, clearResults, showResultsSection } from './components/resultsTable.js';
+import { renderResultsForStrategies, clearResults, showResultsSection } from './components/resultsTable.js';
 import { renderSummary, clearSummary } from './components/summary.js';
 import { renderCharts, clearCharts, showChartsSection } from './components/chart.js';
 import { initAdvancedSettings, getConfig } from './components/advancedSettings.js';
-import { compareStrategies } from './calculators/comparisonEngine.js';
+import { compareStrategies, compareAnyStrategies } from './calculators/comparisonEngine.js';
 
 /**
  * Initialize the application
@@ -41,18 +41,34 @@ async function handleCalculation(inputs) {
     // Get fee configuration from advanced settings
     const config = getConfig();
 
-    // Run comparison with optional custom fees
-    const comparison = compareStrategies(
-      inputs.pensionAmount,
-      inputs.startYear,
-      inputs.withdrawalRate,
-      inputs.years,
-      config
-    );
+    // Determine which comparison to use
+    let comparison;
+    if (inputs.strategy1 && inputs.strategy2) {
+      // Use the new generic comparison for any two strategies
+      comparison = compareAnyStrategies(
+        inputs.strategy1,
+        inputs.strategy2,
+        inputs.pensionAmount,
+        inputs.startYear,
+        inputs.withdrawalRate,
+        inputs.years,
+        config
+      );
+    } else {
+      // Fallback to legacy comparison (gold vs sp500)
+      comparison = compareStrategies(
+        inputs.pensionAmount,
+        inputs.startYear,
+        inputs.withdrawalRate,
+        inputs.years,
+        config
+      );
+      // Adapt legacy format to new format
+      comparison = adaptLegacyComparison(comparison);
+    }
 
     // Render results
-    renderGoldResults(comparison.gold);
-    renderSippResults(comparison.sipp);
+    renderResultsForStrategies(comparison);
     showResultsSection();
 
     // Render charts
@@ -71,6 +87,48 @@ async function handleCalculation(inputs) {
   } finally {
     enableForm();
   }
+}
+
+/**
+ * Adapt legacy comparison format to new generic format
+ *
+ * @param {Object} legacy - Legacy comparison result
+ * @returns {Object} Adapted comparison result
+ */
+function adaptLegacyComparison(legacy) {
+  return {
+    inputs: legacy.inputs,
+    strategy1: {
+      id: 'gold',
+      name: 'Physical Gold',
+      shortName: 'Gold',
+      type: 'gold',
+      result: legacy.gold,
+      metrics: legacy.summary.gold
+    },
+    strategy2: {
+      id: 'sp500',
+      name: 'S&P 500 SIPP',
+      shortName: 'S&P 500',
+      type: 'sipp',
+      result: legacy.sipp,
+      metrics: legacy.summary.sipp
+    },
+    yearlyComparison: legacy.yearlyComparison.map(y => ({
+      year: y.year,
+      strategy1: y.gold,
+      strategy2: y.sipp,
+      difference: y.difference
+    })),
+    summary: {
+      winner: legacy.summary.winner === 'gold' ? 'strategy1' : (legacy.summary.winner === 'sipp' ? 'strategy2' : 'tie'),
+      winnerName: legacy.summary.winner === 'tie' ? 'Tie' : (legacy.summary.winner === 'gold' ? 'Gold' : 'S&P 500'),
+      difference: legacy.summary.difference,
+      percentageDifference: legacy.summary.percentageDifference,
+      strategy1LeadsBy: legacy.summary.winnerLeadsBy,
+      comparison: legacy.summary.comparison
+    }
+  };
 }
 
 /**
