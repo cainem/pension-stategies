@@ -22,8 +22,8 @@ export const STRATEGY_TYPES = {
 export const BASE_STRATEGIES = {
   gold: {
     id: 'gold',
-    name: 'Physical Gold',
-    shortName: 'Gold',
+    name: 'Physical Gold - Outside Pension',
+    shortName: 'Physical Gold',
     type: STRATEGY_TYPES.GOLD,
     description: 'Withdraw pension, pay tax, buy CGT-exempt gold coins',
     dataSource: 'goldPrices',
@@ -35,6 +35,24 @@ export const BASE_STRATEGIES = {
       onInitialWithdrawal: true,
       onAnnualWithdrawal: false,  // Gold sales are CGT-exempt
       onFinalValue: false
+    }
+  },
+
+  goldEtf: {
+    id: 'goldEtf',
+    name: 'Gold ETF SIPP',
+    shortName: 'Gold ETF',
+    type: STRATEGY_TYPES.SIPP,
+    description: 'Keep pension invested in Gold ETF tracker within SIPP',
+    dataSource: 'goldPrices',
+    currency: 'GBP',
+    requiresCurrencyConversion: false,
+    earliestYear: 1980,
+    fees: ['managementFee'],
+    taxEvents: {
+      onInitialWithdrawal: false,
+      onAnnualWithdrawal: true,  // SIPP withdrawals are taxable
+      onFinalValue: true
     }
   },
 
@@ -161,6 +179,51 @@ export const COMBINATION_STRATEGIES = {
     components: ['nasdaq100', 'ftse100'],
     splitRatio: [0.5, 0.5],
     earliestYear: 1985  // Nasdaq 100 constraint
+  },
+
+  // Gold ETF SIPP combined strategies
+  'goldEtf-sp500': {
+    id: 'goldEtf-sp500',
+    name: '50% Gold ETF + 50% S&P 500',
+    shortName: 'Gold ETF/S&P 500',
+    type: STRATEGY_TYPES.COMBINED,
+    description: 'Split pension 50/50 between Gold ETF and S&P 500 SIPPs',
+    components: ['goldEtf', 'sp500'],
+    splitRatio: [0.5, 0.5],
+    earliestYear: 1980
+  },
+
+  'goldEtf-nasdaq100': {
+    id: 'goldEtf-nasdaq100',
+    name: '50% Gold ETF + 50% Nasdaq 100',
+    shortName: 'Gold ETF/Nasdaq',
+    type: STRATEGY_TYPES.COMBINED,
+    description: 'Split pension 50/50 between Gold ETF and Nasdaq 100 SIPPs',
+    components: ['goldEtf', 'nasdaq100'],
+    splitRatio: [0.5, 0.5],
+    earliestYear: 1985  // Nasdaq 100 constraint
+  },
+
+  'goldEtf-ftse100': {
+    id: 'goldEtf-ftse100',
+    name: '50% Gold ETF + 50% FTSE 100',
+    shortName: 'Gold ETF/FTSE',
+    type: STRATEGY_TYPES.COMBINED,
+    description: 'Split pension 50/50 between Gold ETF and FTSE 100 SIPPs',
+    components: ['goldEtf', 'ftse100'],
+    splitRatio: [0.5, 0.5],
+    earliestYear: 1984  // FTSE 100 constraint
+  },
+
+  'gold-goldEtf': {
+    id: 'gold-goldEtf',
+    name: '50% Physical Gold + 50% Gold ETF',
+    shortName: 'Physical/ETF Gold',
+    type: STRATEGY_TYPES.COMBINED,
+    description: 'Split pension 50/50 between Physical Gold and Gold ETF SIPP',
+    components: ['gold', 'goldEtf'],
+    splitRatio: [0.5, 0.5],
+    earliestYear: 1980
   }
 };
 

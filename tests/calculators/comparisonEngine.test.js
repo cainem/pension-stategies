@@ -467,8 +467,8 @@ describe('compareAnyStrategies', () => {
       const result = compareAnyStrategies('gold', 'nasdaq100', 500000, 1990, 4, 10);
 
       expect(result.strategy1.id).toBe('gold');
-      expect(result.strategy1.name).toBe('Physical Gold');
-      expect(result.strategy1.shortName).toBe('Gold');
+      expect(result.strategy1.name).toBe('Physical Gold - Outside Pension');
+      expect(result.strategy1.shortName).toBe('Physical Gold');
       expect(result.strategy1.type).toBe('gold');
       expect(result.strategy1).toHaveProperty('result');
       expect(result.strategy1).toHaveProperty('metrics');
@@ -580,7 +580,7 @@ describe('compareAnyStrategies', () => {
       const result = compareAnyStrategies('gold', 'sp500', 500000, 2000, 4, 10);
 
       if (result.summary.winner === 'strategy1') {
-        expect(result.summary.winnerName).toBe('Gold');
+        expect(result.summary.winnerName).toBe('Physical Gold');
       } else if (result.summary.winner === 'strategy2') {
         expect(result.summary.winnerName).toBe('S&P 500');
       } else {

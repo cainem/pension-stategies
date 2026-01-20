@@ -17,6 +17,7 @@
 import { getSP500TotalReturn } from '../data/sp500TotalReturn.js';
 import { getNasdaq100TotalReturn, hasDataForYear as hasNasdaq100Data } from '../data/nasdaq100TotalReturn.js';
 import { getFTSE100TotalReturn, hasDataForYear as hasFTSE100Data } from '../data/ftse100TotalReturn.js';
+import { getGoldPrice } from '../data/goldPrices.js';
 import { getExchangeRate } from '../data/exchangeRates.js';
 import { isValidYear } from '../utils/validators.js';
 import { YEAR_RANGE } from '../config/defaults.js';
@@ -27,7 +28,8 @@ import { YEAR_RANGE } from '../config/defaults.js';
 export const INDEX_TYPES = {
   SP500: 'sp500',
   NASDAQ100: 'nasdaq100',
-  FTSE100: 'ftse100'
+  FTSE100: 'ftse100',
+  GOLD_ETF: 'goldEtf'
 };
 
 /**
@@ -61,6 +63,15 @@ export const INDEX_CONFIG = {
     requiresCurrencyConversion: false,
     getIndexValue: getFTSE100TotalReturn,
     earliestYear: 1984
+  },
+  [INDEX_TYPES.GOLD_ETF]: {
+    name: 'Gold ETF',
+    baseYear: 2019,
+    basePriceGbp: 99.70,  // iShares Physical Gold ETC (SGLN) approximate price at start of 2019
+    currency: 'GBP',
+    requiresCurrencyConversion: false,  // Gold prices already in GBP
+    getIndexValue: getGoldPrice,
+    earliestYear: 1980
   }
 };
 

@@ -166,8 +166,8 @@ describe('calculateCombinedStrategy', () => {
 
       // Strategy A metadata
       expect(result.strategyA.id).toBe('gold');
-      expect(result.strategyA.name).toBe('Physical Gold');
-      expect(result.strategyA.shortName).toBe('Gold');
+      expect(result.strategyA.name).toBe('Physical Gold - Outside Pension');
+      expect(result.strategyA.shortName).toBe('Physical Gold');
 
       // Strategy B metadata
       expect(result.strategyB.id).toBe('sp500');

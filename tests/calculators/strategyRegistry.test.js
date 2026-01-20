@@ -32,8 +32,8 @@ describe('STRATEGY_TYPES', () => {
 });
 
 describe('BASE_STRATEGIES', () => {
-  it('given_baseStrategies_when_counting_then_has4Strategies', () => {
-    expect(Object.keys(BASE_STRATEGIES)).toHaveLength(4);
+  it('given_baseStrategies_when_counting_then_has5Strategies', () => {
+    expect(Object.keys(BASE_STRATEGIES)).toHaveLength(5);
   });
 
   it('given_baseStrategies_when_checking_then_hasRequiredIds', () => {
@@ -86,8 +86,8 @@ describe('BASE_STRATEGIES', () => {
 });
 
 describe('COMBINATION_STRATEGIES', () => {
-  it('given_combinationStrategies_when_counting_then_has6Strategies', () => {
-    expect(Object.keys(COMBINATION_STRATEGIES)).toHaveLength(6);
+  it('given_combinationStrategies_when_counting_then_has10Strategies', () => {
+    expect(Object.keys(COMBINATION_STRATEGIES)).toHaveLength(10);
   });
 
   it('given_combinationStrategies_when_checking_then_hasRequiredIds', () => {
@@ -121,8 +121,8 @@ describe('COMBINATION_STRATEGIES', () => {
 });
 
 describe('ALL_STRATEGIES', () => {
-  it('given_allStrategies_when_counting_then_has10Total', () => {
-    expect(Object.keys(ALL_STRATEGIES)).toHaveLength(10);
+  it('given_allStrategies_when_counting_then_has15Total', () => {
+    expect(Object.keys(ALL_STRATEGIES)).toHaveLength(15);
   });
 });
 
@@ -130,7 +130,7 @@ describe('getStrategy', () => {
   it('given_validId_when_gettingStrategy_then_returnsStrategy', () => {
     const gold = getStrategy('gold');
     expect(gold.id).toBe('gold');
-    expect(gold.name).toBe('Physical Gold');
+    expect(gold.name).toBe('Physical Gold - Outside Pension');
   });
 
   it('given_combinedId_when_gettingStrategy_then_returnsStrategy', () => {
@@ -148,9 +148,9 @@ describe('getStrategy', () => {
 });
 
 describe('getBaseStrategies', () => {
-  it('given_registry_when_gettingBaseStrategies_then_returns4', () => {
+  it('given_registry_when_gettingBaseStrategies_then_returns5', () => {
     const strategies = getBaseStrategies();
-    expect(strategies).toHaveLength(4);
+    expect(strategies).toHaveLength(5);
   });
 
   it('given_registry_when_gettingBaseStrategies_then_excludesCombined', () => {
@@ -162,9 +162,9 @@ describe('getBaseStrategies', () => {
 });
 
 describe('getCombinationStrategies', () => {
-  it('given_registry_when_gettingCombinationStrategies_then_returns6', () => {
+  it('given_registry_when_gettingCombinationStrategies_then_returns10', () => {
     const strategies = getCombinationStrategies();
-    expect(strategies).toHaveLength(6);
+    expect(strategies).toHaveLength(10);
   });
 
   it('given_registry_when_gettingCombinationStrategies_then_allAreCombined', () => {
@@ -176,9 +176,9 @@ describe('getCombinationStrategies', () => {
 });
 
 describe('getAllStrategies', () => {
-  it('given_registry_when_gettingAllStrategies_then_returns10', () => {
+  it('given_registry_when_gettingAllStrategies_then_returns15', () => {
     const strategies = getAllStrategies();
-    expect(strategies).toHaveLength(10);
+    expect(strategies).toHaveLength(15);
   });
 });
 
@@ -189,14 +189,14 @@ describe('getStrategiesByType', () => {
     expect(strategies[0].id).toBe('gold');
   });
 
-  it('given_sippType_when_filtering_then_returns3', () => {
+  it('given_sippType_when_filtering_then_returns4', () => {
     const strategies = getStrategiesByType(STRATEGY_TYPES.SIPP);
-    expect(strategies).toHaveLength(3);
+    expect(strategies).toHaveLength(4);
   });
 
-  it('given_combinedType_when_filtering_then_returns6', () => {
+  it('given_combinedType_when_filtering_then_returns10', () => {
     const strategies = getStrategiesByType(STRATEGY_TYPES.COMBINED);
-    expect(strategies).toHaveLength(6);
+    expect(strategies).toHaveLength(10);
   });
 });
 
@@ -257,12 +257,12 @@ describe('getStrategiesAvailableForYear', () => {
 
   it('given_year1985_when_gettingAvailable_then_includesAll', () => {
     const strategies = getStrategiesAvailableForYear(1985);
-    expect(strategies).toHaveLength(10);
+    expect(strategies).toHaveLength(15);
   });
 
   it('given_year2000_when_gettingAvailable_then_includesAll', () => {
     const strategies = getStrategiesAvailableForYear(2000);
-    expect(strategies).toHaveLength(10);
+    expect(strategies).toHaveLength(15);
   });
 });
 
@@ -332,15 +332,15 @@ describe('getStrategiesGroupedForDisplay', () => {
     expect(grouped.combined).toBeDefined();
   });
 
-  it('given_registry_when_grouping_then_baseHas4', () => {
+  it('given_registry_when_grouping_then_baseHas5', () => {
     const grouped = getStrategiesGroupedForDisplay();
-    expect(grouped.base.strategies).toHaveLength(4);
+    expect(grouped.base.strategies).toHaveLength(5);
     expect(grouped.base.label).toBe('Base Strategies');
   });
 
-  it('given_registry_when_grouping_then_combinedHas6', () => {
+  it('given_registry_when_grouping_then_combinedHas10', () => {
     const grouped = getStrategiesGroupedForDisplay();
-    expect(grouped.combined.strategies).toHaveLength(6);
+    expect(grouped.combined.strategies).toHaveLength(10);
     expect(grouped.combined.label).toBe('Combined (50/50)');
   });
 });

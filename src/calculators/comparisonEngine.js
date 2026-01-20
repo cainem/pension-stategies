@@ -12,6 +12,7 @@ import { calculateSippStrategy, calculateSippAfterTaxValue, INDEX_TYPES } from '
 import { calculateCombinedStrategy } from './combinedStrategy.js';
 import { getStrategy, STRATEGY_TYPES } from './strategyRegistry.js';
 import { isValidYear, isValidAmount } from '../utils/validators.js';
+import { INDEX_TYPES as ETF_INDEX_TYPES } from './syntheticEtf.js';
 
 /**
  * Map strategy IDs to SIPP index types
@@ -19,7 +20,8 @@ import { isValidYear, isValidAmount } from '../utils/validators.js';
 const STRATEGY_TO_INDEX = {
   sp500: INDEX_TYPES.SP500,
   nasdaq100: INDEX_TYPES.NASDAQ100,
-  ftse100: INDEX_TYPES.FTSE100
+  ftse100: INDEX_TYPES.FTSE100,
+  goldEtf: ETF_INDEX_TYPES.GOLD_ETF
 };
 
 /**

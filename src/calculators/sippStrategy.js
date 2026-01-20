@@ -418,6 +418,13 @@ export function calculateFTSE100SippStrategy(pensionAmount, startYear, withdrawa
   return calculateSippStrategy(pensionAmount, startYear, withdrawalRate, years, INDEX_TYPES.FTSE100);
 }
 
+/**
+ * Calculate Gold ETF SIPP strategy
+ */
+export function calculateGoldEtfSippStrategy(pensionAmount, startYear, withdrawalRate, years) {
+  return calculateSippStrategy(pensionAmount, startYear, withdrawalRate, years, INDEX_TYPES.GOLD_ETF);
+}
+
 // Re-export INDEX_TYPES for convenience
 export { INDEX_TYPES };
 
@@ -426,6 +433,7 @@ export default {
   calculateSP500SippStrategy,
   calculateNasdaq100SippStrategy,
   calculateFTSE100SippStrategy,
+  calculateGoldEtfSippStrategy,
   calculateSippYearsRemaining,
   getSippValue,
   calculateSippAfterTaxValue,
