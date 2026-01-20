@@ -580,6 +580,16 @@ h3 { font-size: var(--font-size-xl); }
   border-radius: var(--radius-sm);
 }
 
+.summary-item.sub-detail {
+  font-size: var(--font-size-sm);
+  padding-left: var(--spacing-md);
+  border-bottom: none;
+}
+
+.summary-item.sub-detail dt {
+  color: var(--color-text-muted);
+}
+
 /* ============================================
    Table Status Classes
    ============================================ */

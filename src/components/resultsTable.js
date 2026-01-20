@@ -79,7 +79,7 @@ function updateTableColumnHeaders(slot, strategyData) {
   const thead = document.querySelector(`#${tableId} thead tr`);
   if (!thead) return;
 
-  const { type, shortName } = strategyData;
+  const { type, result } = strategyData;
 
   if (type === STRATEGY_TYPES.GOLD) {
     thead.innerHTML = `
@@ -102,14 +102,17 @@ function updateTableColumnHeaders(slot, strategyData) {
       <th scope="col">Portfolio Value</th>
     `;
   } else if (type === STRATEGY_TYPES.COMBINED) {
+    // Get sub-strategy names from combined result
+    const nameA = result?.strategyA?.shortName || 'Strategy A';
+    const nameB = result?.strategyB?.shortName || 'Strategy B';
     thead.innerHTML = `
       <th scope="col">Year</th>
-      <th scope="col">-</th>
-      <th scope="col">-</th>
+      <th scope="col">${nameA} Value</th>
+      <th scope="col">${nameB} Value</th>
       <th scope="col">-</th>
       <th scope="col">-</th>
       <th scope="col">Net Received</th>
-      <th scope="col">Portfolio Value</th>
+      <th scope="col">Combined Value</th>
     `;
   }
 }
@@ -210,29 +213,73 @@ function renderSippInitialSummaryContent(container, result, shortName) {
 function renderCombinedInitialSummaryContent(container, result, shortName) {
   const { strategyA, strategyB, summary } = result;
 
+  // Support both initialInvestment and initialPension for compatibility
+  const totalPension = summary.initialInvestment || summary.initialPension || 0;
+  const allocationA = summary.allocationA || totalPension / 2;
+  const allocationB = summary.allocationB || totalPension / 2;
+
+  // Get initial values from each sub-strategy
+  const strategyAInitial = getStrategyInitialInfo(strategyA);
+  const strategyBInitial = getStrategyInitialInfo(strategyB);
+
   container.innerHTML = `
     <div class="initial-summary-card combined-theme">
       <h4>${shortName} - Initial Split</h4>
       <dl class="summary-list">
         <div class="summary-item">
           <dt>Total Pension</dt>
-          <dd>${formatCurrency(summary.initialPension)}</dd>
+          <dd>${formatCurrency(totalPension)}</dd>
         </div>
         <div class="summary-item">
-          <dt>${strategyA.name || 'Strategy A'} (50%)</dt>
-          <dd>${formatCurrency(summary.initialPension / 2)}</dd>
+          <dt>${strategyA.name || strategyA.shortName || 'Strategy A'} (50%)</dt>
+          <dd>${formatCurrency(allocationA)}</dd>
         </div>
         <div class="summary-item">
-          <dt>${strategyB.name || 'Strategy B'} (50%)</dt>
-          <dd>${formatCurrency(summary.initialPension / 2)}</dd>
+          <dt>${strategyB.name || strategyB.shortName || 'Strategy B'} (50%)</dt>
+          <dd>${formatCurrency(allocationB)}</dd>
         </div>
+        ${strategyAInitial.detailHtml}
+        ${strategyBInitial.detailHtml}
         <div class="summary-item highlight">
           <dt>Combined Starting Value</dt>
-          <dd>${formatCurrency(summary.initialValue || summary.initialPension)}</dd>
+          <dd>${formatCurrency(strategyAInitial.startValue + strategyBInitial.startValue)}</dd>
         </div>
       </dl>
     </div>
   `;
+}
+
+/**
+ * Get initial info from a sub-strategy for combined display
+ */
+function getStrategyInitialInfo(strategy) {
+  const { type, result, shortName, name } = strategy;
+  const displayName = shortName || name || 'Strategy';
+
+  if (type === 'gold') {
+    const initial = result.initialWithdrawal;
+    return {
+      startValue: result.yearlyResults[0]?.startValueGbp || 0,
+      detailHtml: `
+        <div class="summary-item sub-detail">
+          <dt>↳ ${displayName}: Tax paid</dt>
+          <dd class="negative">${formatCurrency(initial?.taxCalculation?.taxPaid || 0)}</dd>
+        </div>
+      `
+    };
+  } else {
+    // SIPP
+    const initial = result.initialInvestment;
+    return {
+      startValue: initial?.initialValue || result.yearlyResults[0]?.startValueGbp || 0,
+      detailHtml: `
+        <div class="summary-item sub-detail">
+          <dt>↳ ${displayName}: No initial tax</dt>
+          <dd class="positive">£0</dd>
+        </div>
+      `
+    };
+  }
 }
 
 /**
@@ -297,17 +344,32 @@ function renderSippTableContent(tbody, yearlyResults) {
  * Render Combined strategy table content
  */
 function renderCombinedTableContent(tbody, yearlyResults) {
-  tbody.innerHTML = yearlyResults.map(year => `
-    <tr class="${getStatusClass(year.status)}">
-      <td>${year.year}</td>
-      <td>-</td>
-      <td>-</td>
-      <td>-</td>
-      <td>-</td>
-      <td>${formatCurrency(year.combinedWithdrawal)}</td>
-      <td class="highlight-cell">${formatCurrency(year.combinedEndValue)}</td>
-    </tr>
-  `).join('');
+  tbody.innerHTML = yearlyResults.map(year => {
+    // Extract values from sub-strategies
+    const valueA = getSubStrategyValue(year.strategyA);
+    const valueB = getSubStrategyValue(year.strategyB);
+
+    return `
+      <tr class="${getStatusClass(year.status)}">
+        <td>${year.year}</td>
+        <td>${formatCurrency(valueA)}</td>
+        <td>${formatCurrency(valueB)}</td>
+        <td>-</td>
+        <td>-</td>
+        <td>${formatCurrency(year.combinedWithdrawal)}</td>
+        <td class="highlight-cell">${formatCurrency(year.combinedEndValue)}</td>
+      </tr>
+    `;
+  }).join('');
+}
+
+/**
+ * Get portfolio value from a sub-strategy yearly result
+ */
+function getSubStrategyValue(yearData) {
+  if (!yearData) return 0;
+  // Gold uses endValueGbp, SIPP uses endValueGbp
+  return yearData.endValueGbp || 0;
 }
 
 /**
