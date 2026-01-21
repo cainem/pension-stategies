@@ -4,8 +4,8 @@
 
 export const DEFAULTS = {
   pensionAmount: 500000,
-  startYear: 2000,
-  withdrawalRate: 4,
+  startYear: 2001,
+  withdrawalRate: 5,
   comparisonYears: 25
 };
 

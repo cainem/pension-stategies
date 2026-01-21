@@ -143,6 +143,10 @@ function renderGenericInitialSummary(slot, strategyData) {
 function renderGoldInitialSummaryContent(container, result, shortName) {
   const { initialWithdrawal } = result;
 
+  // Calculate the actual transaction fee percentage used
+  const transactionFeePercent = (initialWithdrawal.goldPurchaseCost / 
+    (initialWithdrawal.netAfterTax + initialWithdrawal.goldPurchaseCost) * 100).toFixed(0);
+
   container.innerHTML = `
     <div class="initial-summary-card gold-theme">
       <h4>${shortName} - Initial Withdrawal</h4>
@@ -160,7 +164,7 @@ function renderGoldInitialSummaryContent(container, result, shortName) {
           <dd>${formatCurrency(initialWithdrawal.netAfterTax)}</dd>
         </div>
         <div class="summary-item">
-          <dt>Gold Purchase Cost (2%)</dt>
+          <dt>Gold Purchase Cost (${transactionFeePercent}%)</dt>
           <dd class="negative">${formatCurrency(initialWithdrawal.goldPurchaseCost)}</dd>
         </div>
         <div class="summary-item highlight">

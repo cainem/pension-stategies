@@ -135,6 +135,29 @@ h3 { font-size: var(--font-size-xl); }
 }
 
 /* ============================================
+   Intro Section
+   ============================================ */
+.intro-section {
+  text-align: center;
+  max-width: 800px;
+  margin: 0 auto var(--spacing-xl);
+  padding: 0 var(--spacing-lg);
+}
+
+.intro-text {
+  font-size: var(--font-size-lg);
+  color: var(--color-text);
+  line-height: 1.7;
+  margin: 0 0 var(--spacing-md) 0;
+}
+
+.intro-text--secondary {
+  font-size: var(--font-size-base);
+  color: var(--color-text-muted);
+  margin-bottom: 0;
+}
+
+/* ============================================
    Input Section
    ============================================ */
 .input-section {

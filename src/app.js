@@ -10,6 +10,7 @@ import { renderCharts, clearCharts, showChartsSection } from './components/chart
 import { initAdvancedSettings, getConfig } from './components/advancedSettings.js';
 import { renderDisclaimers, initializeDisclaimers } from './components/disclaimer.js';
 import { compareStrategies, compareAnyStrategies } from './calculators/comparisonEngine.js';
+import { DEFAULTS } from './config/defaults.js';
 
 /**
  * Initialize the application
@@ -22,6 +23,9 @@ export function initApp() {
   initAdvancedSettings();
   initializeDisclaimers();
 
+  // Auto-load results with default values
+  loadDefaultResults();
+
   console.log('Pension Strategy Comparison Tool initialized');
 }
 
@@ -29,8 +33,9 @@ export function initApp() {
  * Handle the calculation when form is submitted
  *
  * @param {Object} inputs - Validated form inputs
+ * @param {boolean} shouldScroll - Whether to scroll to results (default: true)
  */
-async function handleCalculation(inputs) {
+async function handleCalculation(inputs, shouldScroll = true) {
   try {
     disableForm();
     clearResults();
@@ -89,8 +94,10 @@ async function handleCalculation(inputs) {
     );
     showDisclaimersSection();
 
-    // Scroll to results
-    scrollToResults();
+    // Scroll to results (unless loading defaults on page load)
+    if (shouldScroll) {
+      scrollToResults();
+    }
 
   } catch (error) {
     console.error('Calculation error:', error);
@@ -184,5 +191,23 @@ function hideError() {
   if (errorEl) {
     errorEl.hidden = true;
   }
+}
+
+/**
+ * Load results with default values on page load
+ */
+function loadDefaultResults() {
+  // Use default strategy selections (gold vs sp500)
+  const defaultInputs = {
+    strategy1: 'gold',
+    strategy2: 'sp500',
+    pensionAmount: DEFAULTS.pensionAmount,
+    startYear: DEFAULTS.startYear,
+    withdrawalRate: DEFAULTS.withdrawalRate,
+    years: DEFAULTS.comparisonYears
+  };
+
+  // Trigger calculation with defaults (don't scroll on initial load)
+  handleCalculation(defaultInputs, false);
 }
 
