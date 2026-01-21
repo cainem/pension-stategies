@@ -1,16 +1,16 @@
 /**
  * Disclaimer Component Tests
- * 
+ *
  * Tests for the disclaimer functionality including strategy-specific
  * disclaimer filtering and rendering.
- * 
+ *
  * All tests follow the naming convention: given_[precondition]_when_[action]_then_[expectedResult]
  */
 
 import { describe, test, expect } from 'vitest';
-import { 
-  DISCLAIMERS, 
-  getApplicableDisclaimers 
+import {
+  DISCLAIMERS,
+  getApplicableDisclaimers
 } from '../../src/components/disclaimer.js';
 
 describe('DISCLAIMERS', () => {
@@ -131,29 +131,29 @@ describe('getApplicableDisclaimers', () => {
   test('given_combinedStrategy_when_gettingDisclaimers_then_includesRelevantDisclaimers', () => {
     const disclaimers = getApplicableDisclaimers('gold-sp500', 'nasdaq100', 2010);
     const ids = disclaimers.map(d => d.id);
-    
+
     // Should include gold disclaimers because of gold-sp500
     expect(ids).toContain('goldCgtExemption');
     expect(ids).toContain('goldStorageCosts');
-    
+
     // Should include SIPP fees for both strategies
     expect(ids).toContain('sippFees');
-    
+
     // Should include currency risk for SP500 and Nasdaq
     expect(ids).toContain('currencyRisk');
-    
+
     // Should include pre-2015 disclaimer
     expect(ids).toContain('prePensionFreedoms');
   });
 
   test('given_disclaimers_when_returned_then_sortedByPriority', () => {
     const disclaimers = getApplicableDisclaimers('gold', 'sp500', 2010);
-    
+
     // Check that disclaimers are sorted by priority
     for (let i = 0; i < disclaimers.length - 1; i++) {
       expect(disclaimers[i].priority).toBeLessThanOrEqual(disclaimers[i + 1].priority);
     }
-    
+
     // General should be first (priority 1)
     expect(disclaimers[0].id).toBe('general');
   });

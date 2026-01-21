@@ -393,11 +393,8 @@ describe('integration tests', () => {
   test('given_highWithdrawalRate_when_comparing_then_bothMayDeplete', () => {
     const result = compareStrategies(100000, 2000, 15, 26);
 
-    // At least one strategy may have depleted
-    const goldDepleted = result.summary.gold.yearDepleted !== null;
-    const sippDepleted = result.summary.sipp.yearDepleted !== null;
-
-    // Just verify the comparison completed without error
+    // High withdrawal rate may cause depletion - just verify completion
+    // result.summary.gold.yearDepleted and result.summary.sipp.yearDepleted track this
     expect(result.yearlyComparison).toHaveLength(26);
   });
 

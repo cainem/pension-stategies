@@ -12,7 +12,7 @@ import {
   getCombinedStrategyEarliestYear,
   isCombinedStrategyAvailable
 } from '../../src/calculators/combinedStrategy.js';
-import { COMBINATION_STRATEGIES, BASE_STRATEGIES } from '../../src/calculators/strategyRegistry.js';
+// Strategy registry constants available via combinedStrategy exports
 
 describe('calculateCombinedStrategy', () => {
   describe('input validation', () => {
@@ -128,9 +128,8 @@ describe('calculateCombinedStrategy', () => {
       // Small pot with high withdrawal should exhaust one half before the other
       const result = calculateCombinedStrategy('gold-sp500', 50000, 2000, 10, 26);
 
-      // Should have some partial years (where one is exhausted but other continues)
-      const partialYears = result.yearlyResults.filter(y => y.status === 'partial');
       // May or may not have partial years depending on performance
+      // Status can be 'active', 'partial', or 'exhausted'
       expect(result.yearlyResults.length).toBe(26);
     });
 

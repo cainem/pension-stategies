@@ -372,7 +372,7 @@ export function disableForm() {
   const button = form?.querySelector('button[type="submit"]');
 
   if (form) {
-    Array.from(form.elements).forEach(el => el.disabled = true);
+    Array.from(form.elements).forEach(el => { el.disabled = true; });
   }
 
   if (button) {
@@ -388,7 +388,7 @@ export function enableForm() {
   const button = form?.querySelector('button[type="submit"]');
 
   if (form) {
-    Array.from(form.elements).forEach(el => el.disabled = false);
+    Array.from(form.elements).forEach(el => { el.disabled = false; });
   }
 
   if (button) {

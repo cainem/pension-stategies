@@ -6,7 +6,7 @@
  * @module components/resultsTable
  */
 
-import { formatCurrency, formatNumber, formatPercent } from '../utils/formatters.js';
+import { formatCurrency, formatNumber } from '../utils/formatters.js';
 import { STRATEGY_TYPES } from '../calculators/strategyRegistry.js';
 
 /**
@@ -144,7 +144,7 @@ function renderGoldInitialSummaryContent(container, result, shortName) {
   const { initialWithdrawal } = result;
 
   // Calculate the actual transaction fee percentage used
-  const transactionFeePercent = (initialWithdrawal.goldPurchaseCost / 
+  const transactionFeePercent = (initialWithdrawal.goldPurchaseCost /
     (initialWithdrawal.netAfterTax + initialWithdrawal.goldPurchaseCost) * 100).toFixed(0);
 
   container.innerHTML = `

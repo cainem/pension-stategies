@@ -15,7 +15,7 @@
 
 import { calculateGoldStrategy } from './goldStrategy.js';
 import { calculateSippStrategy, INDEX_TYPES } from './sippStrategy.js';
-import { getStrategy, COMBINATION_STRATEGIES, BASE_STRATEGIES } from './strategyRegistry.js';
+import { COMBINATION_STRATEGIES, BASE_STRATEGIES } from './strategyRegistry.js';
 import { isValidYear, isValidAmount } from '../utils/validators.js';
 
 /**

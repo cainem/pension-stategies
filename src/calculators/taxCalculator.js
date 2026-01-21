@@ -163,7 +163,8 @@ function calculateTaxByBand(taxableAmount, taxData) {
  * @returns {TaxCalculationResult} Zero tax result
  */
 function createZeroTaxResult(year) {
-  const taxData = getTaxData(year);
+  // Validate the year but don't need the data
+  getTaxData(year);
 
   return {
     grossIncome: 0,

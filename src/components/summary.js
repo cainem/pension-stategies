@@ -7,7 +7,7 @@
  * @module components/summary
  */
 
-import { formatCurrency, formatPercent } from '../utils/formatters.js';
+import { formatCurrency } from '../utils/formatters.js';
 import { getKeyInsights, findCrossoverPoint } from '../calculators/comparisonEngine.js';
 
 /**
@@ -21,7 +21,7 @@ export function renderSummary(comparison) {
 
   if (!section || !container) return;
 
-  const { summary, inputs } = comparison;
+  const { summary } = comparison;
 
   // Check if new format (has strategy1/strategy2) or legacy format (has gold/sipp)
   const isNewFormat = comparison.strategy1 !== undefined;
@@ -109,12 +109,18 @@ function renderStrategyMetrics(strategy) {
   const { shortName, type, metrics } = strategy;
 
   // Determine theme class based on strategy type
-  const themeClass = type === 'gold' ? 'gold-theme' :
-                     type === 'combined' ? 'combined-theme' : 'sipp-theme';
+  const themeClass = type === 'gold'
+    ? 'gold-theme'
+    : type === 'combined'
+      ? 'combined-theme'
+      : 'sipp-theme';
 
   // Determine cost label based on type
-  const costLabel = type === 'gold' ? 'Transaction Costs + Storage' :
-                    type === 'combined' ? 'Total Fees' : 'Management Fees + Tax';
+  const costLabel = type === 'gold'
+    ? 'Transaction Costs + Storage'
+    : type === 'combined'
+      ? 'Total Fees'
+      : 'Management Fees + Tax';
 
   const totalCosts = type === 'gold'
     ? (metrics.totalFees || 0)

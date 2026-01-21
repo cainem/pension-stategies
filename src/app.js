@@ -183,15 +183,6 @@ function showError(message) {
   }
 }
 
-/**
- * Hide the error message
- */
-function hideError() {
-  const errorEl = document.getElementById('error-message');
-  if (errorEl) {
-    errorEl.hidden = true;
-  }
-}
 
 /**
  * Load results with default values on page load

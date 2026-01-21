@@ -15,8 +15,8 @@
  */
 
 import { getSP500TotalReturn } from '../data/sp500TotalReturn.js';
-import { getNasdaq100TotalReturn, hasDataForYear as hasNasdaq100Data } from '../data/nasdaq100TotalReturn.js';
-import { getFTSE100TotalReturn, hasDataForYear as hasFTSE100Data } from '../data/ftse100TotalReturn.js';
+import { getNasdaq100TotalReturn } from '../data/nasdaq100TotalReturn.js';
+import { getFTSE100TotalReturn } from '../data/ftse100TotalReturn.js';
 import { getGoldPrice } from '../data/goldPrices.js';
 import { getExchangeRate } from '../data/exchangeRates.js';
 import { isValidYear } from '../utils/validators.js';
@@ -107,7 +107,7 @@ export const BASE_PRICE_GBP = INDEX_CONFIG[INDEX_TYPES.SP500].basePriceGbp;
  */
 export function getSyntheticPrice(year, indexType = INDEX_TYPES.SP500) {
   const config = INDEX_CONFIG[indexType];
-  
+
   if (!config) {
     throw new Error(`Unknown index type: ${indexType}. Valid types: ${Object.keys(INDEX_CONFIG).join(', ')}`);
   }
@@ -347,12 +347,12 @@ export default {
   calculateAnnualizedReturn,
   getAllPrices,
   validatePrices,
-  
+
   // Utility functions
   isDataAvailable,
   getEarliestYear,
   getIndexConfig,
-  
+
   // Constants
   INDEX_TYPES,
   INDEX_CONFIG,
