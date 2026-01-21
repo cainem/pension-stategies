@@ -27,8 +27,8 @@ describe('calculateGoldStrategy', () => {
     });
 
     test('given_invalidStartYear_when_calculating_then_throwsError', () => {
-      expect(() => calculateGoldStrategy(100000, 1999, 4, 10))
-        .toThrow('Start year 1999 is outside supported range');
+      expect(() => calculateGoldStrategy(100000, 1979, 4, 10))
+        .toThrow('Start year 1979 is outside supported range');
     });
 
     test('given_invalidWithdrawalRate_when_calculating_then_throwsError', () => {
@@ -200,6 +200,9 @@ describe('calculateGoldStrategy', () => {
         expect(year).toHaveProperty('startGoldOunces');
         expect(year).toHaveProperty('goldPricePerOunce');
         expect(year).toHaveProperty('startValueGbp');
+        expect(year).toHaveProperty('storageFee');
+        expect(year).toHaveProperty('goldSoldForStorage');
+        expect(year).toHaveProperty('valueAfterStorageFee');
         expect(year).toHaveProperty('withdrawalGross');
         expect(year).toHaveProperty('goldSold');
         expect(year).toHaveProperty('transactionCost');
@@ -215,6 +218,7 @@ describe('calculateGoldStrategy', () => {
       expect(result.summary).toHaveProperty('netInvestedInGold');
       expect(result.summary).toHaveProperty('totalWithdrawn');
       expect(result.summary).toHaveProperty('totalTransactionCosts');
+      expect(result.summary).toHaveProperty('totalStorageFees');
       expect(result.summary).toHaveProperty('finalGoldOunces');
       expect(result.summary).toHaveProperty('finalGoldValue');
       expect(result.summary).toHaveProperty('totalValueRealized');
@@ -241,6 +245,10 @@ describe('calculateGoldStrategy', () => {
       const sumSaleCosts = result.yearlyResults.reduce((sum, r) => sum + r.transactionCost, 0);
       const totalCosts = result.initialWithdrawal.goldPurchaseCost + sumSaleCosts;
       expect(result.summary.totalTransactionCosts).toBeCloseTo(totalCosts, 2);
+
+      // Total storage fees should equal sum of yearly storage fees
+      const sumStorageFees = result.yearlyResults.reduce((sum, r) => sum + r.storageFee, 0);
+      expect(result.summary.totalStorageFees).toBeCloseTo(sumStorageFees, 2);
     });
 
     test('given_successfulStrategy_when_summarizing_then_marksAsSuccessful', () => {
@@ -256,6 +264,83 @@ describe('calculateGoldStrategy', () => {
 
       expect(result.summary.strategySuccessful).toBe(false);
       expect(result.summary.yearDepleted).not.toBeNull();
+    });
+  });
+
+  describe('storage fees', () => {
+    test('given_goldHoldings_when_yearly_then_chargesStorageFee', () => {
+      const result = calculateGoldStrategy(500000, 2010, 4, 5);
+
+      // Each year should have a storage fee
+      result.yearlyResults.forEach(year => {
+        if (year.status !== 'exhausted') {
+          expect(year.storageFee).toBeGreaterThan(0);
+        }
+      });
+    });
+
+    test('given_storageFee_when_charged_then_is0Point7PercentOfValue', () => {
+      const result = calculateGoldStrategy(500000, 2010, 4, 5);
+      const firstYear = result.yearlyResults[0];
+
+      // Storage fee should be 0.7% of start value
+      const expectedStorageFee = firstYear.startValueGbp * (COSTS.goldStorageFeePercent / 100);
+      expect(firstYear.storageFee).toBeCloseTo(expectedStorageFee, 2);
+    });
+
+    test('given_storageFee_when_paying_then_sellsGoldToCover', () => {
+      const result = calculateGoldStrategy(500000, 2010, 4, 5);
+      const firstYear = result.yearlyResults[0];
+
+      // Should have sold gold specifically for storage
+      expect(firstYear.goldSoldForStorage).toBeGreaterThan(0);
+
+      // Value after storage fee should be less than start value
+      expect(firstYear.valueAfterStorageFee).toBeLessThan(firstYear.startValueGbp);
+    });
+
+    test('given_storageFeePaid_when_calculating_then_reducesHoldingsBeforeWithdrawal', () => {
+      const result = calculateGoldStrategy(500000, 2010, 4, 5);
+      const firstYear = result.yearlyResults[0];
+
+      // Gold sold for storage + gold sold for withdrawal should total to reduction
+      const totalGoldSold = firstYear.goldSoldForStorage + firstYear.goldSold;
+      const holdingsReduction = firstYear.startGoldOunces - firstYear.endGoldOunces;
+
+      expect(totalGoldSold).toBeCloseTo(holdingsReduction, 6);
+    });
+
+    test('given_totalStorageFees_when_summarizing_then_sumsAllYears', () => {
+      const result = calculateGoldStrategy(500000, 2010, 4, 5);
+
+      const sumStorageFees = result.yearlyResults.reduce((sum, r) => sum + r.storageFee, 0);
+      expect(result.summary.totalStorageFees).toBeCloseTo(sumStorageFees, 2);
+    });
+
+    test('given_storageFees_when_overMultipleYears_then_compoundsReduction', () => {
+      // Storage fees cause compound reduction in holdings
+      const result = calculateGoldStrategy(500000, 2010, 4, 5);
+
+      // Each year's start ounces should be less than previous year's end ounces
+      // (after deducting storage but before withdrawal)
+      for (let i = 1; i < result.yearlyResults.length; i++) {
+        const prevYear = result.yearlyResults[i - 1];
+        const currYear = result.yearlyResults[i];
+
+        // Current year's start should equal previous year's end
+        expect(currYear.startGoldOunces).toBeCloseTo(prevYear.endGoldOunces, 6);
+      }
+    });
+
+    test('given_highStorageCost_when_combined_then_acceleratesDepletion', () => {
+      // With storage fees, depletion should happen faster than theoretical
+      // (0.7% storage + 2% transaction each year adds up)
+      // Use small pot with high withdrawal rate to ensure depletion
+      const result = calculateGoldStrategy(50000, 2000, 8, 26);
+
+      // Should deplete faster due to storage fees eating into principal
+      const depletedYear = result.yearlyResults.find(r => r.status === 'depleted');
+      expect(depletedYear).toBeDefined();
     });
   });
 });
@@ -285,7 +370,7 @@ describe('calculateGoldYearsRemaining', () => {
 
 describe('getGoldValue', () => {
   test('given_invalidYear_when_valuing_then_throwsError', () => {
-    expect(() => getGoldValue(100, 1999)).toThrow('outside supported range');
+    expect(() => getGoldValue(100, 1979)).toThrow('outside supported range');
   });
 
   test('given_validInputs_when_valuing_then_calculatesCorrectly', () => {
@@ -298,6 +383,97 @@ describe('getGoldValue', () => {
 
   test('given_zeroOunces_when_valuing_then_returnsZero', () => {
     expect(getGoldValue(0, 2020)).toBe(0);
+  });
+});
+
+describe('configurable fees', () => {
+  test('given_customTransactionFee_when_calculating_then_usesCustomFee', () => {
+    const defaultResult = calculateGoldStrategy(100000, 2020, 4, 5);
+    const customResult = calculateGoldStrategy(100000, 2020, 4, 5, {
+      goldTransactionPercent: 1.0 // 1% instead of default 2%
+    });
+
+    // Custom fee result should have lower transaction costs
+    expect(customResult.summary.totalTransactionCosts)
+      .toBeLessThan(defaultResult.summary.totalTransactionCosts);
+
+    // More gold should be purchased with lower fees
+    expect(customResult.initialWithdrawal.goldOuncesPurchased)
+      .toBeGreaterThan(defaultResult.initialWithdrawal.goldOuncesPurchased);
+  });
+
+  test('given_customStorageFee_when_calculating_then_usesCustomFee', () => {
+    const defaultResult = calculateGoldStrategy(100000, 2020, 4, 5);
+    const customResult = calculateGoldStrategy(100000, 2020, 4, 5, {
+      goldStorageFeePercent: 0.3 // 0.3% instead of default 0.7%
+    });
+
+    // Custom storage fee should result in lower total storage costs
+    expect(customResult.summary.totalStorageFees)
+      .toBeLessThan(defaultResult.summary.totalStorageFees);
+  });
+
+  test('given_zeroTransactionFee_when_calculating_then_noTransactionCosts', () => {
+    const result = calculateGoldStrategy(100000, 2020, 4, 5, {
+      goldTransactionPercent: 0
+    });
+
+    // No transaction costs
+    expect(result.summary.totalTransactionCosts).toBe(0);
+  });
+
+  test('given_zeroStorageFee_when_calculating_then_noStorageCosts', () => {
+    const result = calculateGoldStrategy(100000, 2020, 4, 5, {
+      goldStorageFeePercent: 0
+    });
+
+    // No storage fees
+    expect(result.summary.totalStorageFees).toBe(0);
+  });
+
+  test('given_partialConfig_when_calculating_then_usesDefaultsForMissing', () => {
+    const customResult = calculateGoldStrategy(100000, 2020, 4, 5, {
+      goldTransactionPercent: 1.0
+      // goldStorageFeePercent not specified, should use default
+    });
+
+    // Should have storage fees (default rate applied)
+    expect(customResult.summary.totalStorageFees).toBeGreaterThan(0);
+
+    // The storage fee percentage used should match default (0.7%)
+    // Storage fees are calculated on gold value, so more gold (due to lower transaction fee) = higher storage
+    // Just verify that storage fees are reasonable (not zero, not absurdly high)
+    const avgGoldValue = (customResult.yearlyResults[0].startValueGbp +
+                          customResult.yearlyResults[4].endValueGbp) / 2;
+    const approximateStoragePercent = (customResult.summary.totalStorageFees / 5) / avgGoldValue * 100;
+    expect(approximateStoragePercent).toBeCloseTo(0.7, 0);
+  });
+
+  test('given_emptyConfig_when_calculating_then_usesAllDefaults', () => {
+    const emptyConfigResult = calculateGoldStrategy(100000, 2020, 4, 5, {});
+    const noConfigResult = calculateGoldStrategy(100000, 2020, 4, 5);
+
+    // Results should be identical
+    expect(emptyConfigResult.summary.totalTransactionCosts)
+      .toBe(noConfigResult.summary.totalTransactionCosts);
+    expect(emptyConfigResult.summary.totalStorageFees)
+      .toBe(noConfigResult.summary.totalStorageFees);
+  });
+});
+
+describe('calculateGoldYearsRemaining with config', () => {
+  test('given_customStorageFee_when_calculatingYearsRemaining_then_usesCustomFee', () => {
+    const goldOunces = 100;
+    const startYear = 2020;
+    const annualWithdrawal = 10000;
+
+    const defaultYears = calculateGoldYearsRemaining(goldOunces, startYear, annualWithdrawal);
+    const customYears = calculateGoldYearsRemaining(goldOunces, startYear, annualWithdrawal, {
+      goldStorageFeePercent: 0.1 // Much lower than default
+    });
+
+    // Lower storage fee = gold lasts longer
+    expect(customYears).toBeGreaterThanOrEqual(defaultYears);
   });
 });
 

@@ -1,7 +1,7 @@
 /**
  * Chart Component
  *
- * Renders interactive charts comparing Gold vs SIPP strategy performance.
+ * Renders interactive charts comparing pension strategy performance.
  * Uses Chart.js for visualization.
  *
  * @module components/chart
@@ -17,10 +17,79 @@ Chart.register(...registerables);
 let portfolioChart = null;
 let withdrawalChart = null;
 
+// Chart color configurations
+const STRATEGY_COLORS = {
+  gold: {
+    border: '#D4AF37',
+    background: 'rgba(212, 175, 55, 0.1)',
+    point: '#D4AF37'
+  },
+  sipp: {
+    border: '#3B82F6',
+    background: 'rgba(59, 130, 246, 0.1)',
+    point: '#3B82F6'
+  },
+  combined: {
+    border: '#8B5CF6',
+    background: 'rgba(139, 92, 246, 0.1)',
+    point: '#8B5CF6'
+  }
+};
+
+/**
+ * Get chart color configuration for a strategy
+ */
+function getStrategyColor(type) {
+  return STRATEGY_COLORS[type] || STRATEGY_COLORS.sipp;
+}
+
+/**
+ * Normalize comparison data to support both legacy and new format
+ */
+function normalizeComparisonData(comparison) {
+  // Check if it's the new format with strategy1/strategy2
+  if (comparison.strategy1 !== undefined) {
+    const { strategy1, strategy2, yearlyComparison } = comparison;
+    return {
+      labels: yearlyComparison.map(y => y.year),
+      series1: {
+        name: strategy1.shortName,
+        values: yearlyComparison.map(y => y.strategy1.assetValue),
+        withdrawals: yearlyComparison.map(y => y.strategy1.netWithdrawal),
+        colors: getStrategyColor(strategy1.type)
+      },
+      series2: {
+        name: strategy2.shortName,
+        values: yearlyComparison.map(y => y.strategy2.assetValue),
+        withdrawals: yearlyComparison.map(y => y.strategy2.netWithdrawal),
+        colors: getStrategyColor(strategy2.type)
+      }
+    };
+  }
+
+  // Legacy format with gold/sipp
+  const { yearlyComparison } = comparison;
+  return {
+    labels: yearlyComparison.map(y => y.year),
+    series1: {
+      name: 'Gold Strategy',
+      values: yearlyComparison.map(y => y.gold.assetValue),
+      withdrawals: yearlyComparison.map(y => y.gold.netWithdrawal),
+      colors: getStrategyColor('gold')
+    },
+    series2: {
+      name: 'S&P 500 SIPP',
+      values: yearlyComparison.map(y => y.sipp.assetValue),
+      withdrawals: yearlyComparison.map(y => y.sipp.netWithdrawal),
+      colors: getStrategyColor('sipp')
+    }
+  };
+}
+
 /**
  * Render all charts for the comparison
  *
- * @param {Object} comparison - The comparison result from compareStrategies
+ * @param {Object} comparison - The comparison result from compareStrategies or compareAnyStrategies
  */
 export function renderCharts(comparison) {
   renderPortfolioValueChart(comparison);
@@ -41,42 +110,37 @@ function renderPortfolioValueChart(comparison) {
     portfolioChart.destroy();
   }
 
-  const { yearlyComparison } = comparison;
-
-  const labels = yearlyComparison.map(y => y.year);
-  const goldData = yearlyComparison.map(y => y.gold.assetValue);
-  const sippData = yearlyComparison.map(y => y.sipp.assetValue);
-
+  const data = normalizeComparisonData(comparison);
   const ctx = canvas.getContext('2d');
 
   portfolioChart = new Chart(ctx, {
     type: 'line',
     data: {
-      labels,
+      labels: data.labels,
       datasets: [
         {
-          label: 'Gold Strategy',
-          data: goldData,
-          borderColor: '#D4AF37',
-          backgroundColor: 'rgba(212, 175, 55, 0.1)',
+          label: data.series1.name,
+          data: data.series1.values,
+          borderColor: data.series1.colors.border,
+          backgroundColor: data.series1.colors.background,
           borderWidth: 3,
           fill: true,
           tension: 0.3,
           pointRadius: 4,
           pointHoverRadius: 6,
-          pointBackgroundColor: '#D4AF37'
+          pointBackgroundColor: data.series1.colors.point
         },
         {
-          label: 'S&P 500 SIPP',
-          data: sippData,
-          borderColor: '#3B82F6',
-          backgroundColor: 'rgba(59, 130, 246, 0.1)',
+          label: data.series2.name,
+          data: data.series2.values,
+          borderColor: data.series2.colors.border,
+          backgroundColor: data.series2.colors.background,
           borderWidth: 3,
           fill: true,
           tension: 0.3,
           pointRadius: 4,
           pointHoverRadius: 6,
-          pointBackgroundColor: '#3B82F6'
+          pointBackgroundColor: data.series2.colors.point
         }
       ]
     },
@@ -169,20 +233,18 @@ function renderCumulativeWithdrawalChart(comparison) {
     withdrawalChart.destroy();
   }
 
-  const { yearlyComparison } = comparison;
-
-  const labels = yearlyComparison.map(y => y.year);
+  const data = normalizeComparisonData(comparison);
 
   // Calculate cumulative withdrawals
-  let goldCumulative = 0;
-  let sippCumulative = 0;
-  const goldData = yearlyComparison.map(y => {
-    goldCumulative += y.gold.netWithdrawal;
-    return goldCumulative;
+  let cumulative1 = 0;
+  let cumulative2 = 0;
+  const series1Data = data.series1.withdrawals.map(w => {
+    cumulative1 += w;
+    return cumulative1;
   });
-  const sippData = yearlyComparison.map(y => {
-    sippCumulative += y.sipp.netWithdrawal;
-    return sippCumulative;
+  const series2Data = data.series2.withdrawals.map(w => {
+    cumulative2 += w;
+    return cumulative2;
   });
 
   const ctx = canvas.getContext('2d');
@@ -190,31 +252,31 @@ function renderCumulativeWithdrawalChart(comparison) {
   withdrawalChart = new Chart(ctx, {
     type: 'line',
     data: {
-      labels,
+      labels: data.labels,
       datasets: [
         {
-          label: 'Gold Strategy',
-          data: goldData,
-          borderColor: '#D4AF37',
-          backgroundColor: 'rgba(212, 175, 55, 0.1)',
+          label: data.series1.name,
+          data: series1Data,
+          borderColor: data.series1.colors.border,
+          backgroundColor: data.series1.colors.background,
           borderWidth: 3,
           fill: true,
           tension: 0.3,
           pointRadius: 4,
           pointHoverRadius: 6,
-          pointBackgroundColor: '#D4AF37'
+          pointBackgroundColor: data.series1.colors.point
         },
         {
-          label: 'S&P 500 SIPP',
-          data: sippData,
-          borderColor: '#3B82F6',
-          backgroundColor: 'rgba(59, 130, 246, 0.1)',
+          label: data.series2.name,
+          data: series2Data,
+          borderColor: data.series2.colors.border,
+          backgroundColor: data.series2.colors.background,
           borderWidth: 3,
           fill: true,
           tension: 0.3,
           pointRadius: 4,
           pointHoverRadius: 6,
-          pointBackgroundColor: '#3B82F6'
+          pointBackgroundColor: data.series2.colors.point
         }
       ]
     },
@@ -314,6 +376,7 @@ export function showChartsSection() {
   const section = document.getElementById('charts-section');
   if (section) {
     section.hidden = false;
+    section.classList.add('visible');
   }
 }
 
@@ -324,5 +387,6 @@ export function hideChartsSection() {
   const section = document.getElementById('charts-section');
   if (section) {
     section.hidden = true;
+    section.classList.remove('visible');
   }
 }

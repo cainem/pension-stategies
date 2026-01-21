@@ -3,20 +3,53 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Compare UK pension withdrawal strategies: Gold vs S&P 500 SIPP investment">
-  <title>Pension Strategy Comparison | Gold vs S&P 500 SIPP</title>
+  <meta name="description" content="Compare UK pension withdrawal strategies: Gold vs S&P 500 SIPP investment. Explore the cost of dropping out of the financial system.">
+  <title>A Gold Plated Pension? - The price of dropping out of the financial system</title>
   <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
   <header class="header">
-    <h1>Pension Strategy Comparison</h1>
-    <p class="subtitle">Compare Gold vs S&P 500 SIPP withdrawal strategies</p>
+    <nav class="header-nav">
+      <a href="about.html" class="nav-link">About</a>
+    </nav>
+    <h1>A Gold Plated Pension?</h1>
+    <p class="subtitle">The price of dropping out of the financial system</p>
   </header>
 
   <main class="main">
+    <section class="intro-section">
+      <p class="intro-text">
+        Explore the surprisingly effective use of gold coins in the UK as a drawdown retirement strategy 
+        in recent years, even when compared to a rampant stock market.
+      </p>
+      <p class="intro-text intro-text--secondary">
+        This tool lets you compare various drawdown strategies using historical data.
+      </p>
+    </section>
+
     <section class="input-section" aria-labelledby="input-heading">
       <h2 id="input-heading" class="visually-hidden">Configuration</h2>
       <form id="strategy-form" class="strategy-form">
+        <div class="form-row form-row--strategies">
+          <div class="form-group">
+            <label for="strategy-1">Strategy 1</label>
+            <select id="strategy-1" name="strategy1" required>
+              <!-- Populated by JavaScript -->
+            </select>
+          </div>
+
+          <div class="form-group form-group--vs">
+            <span class="vs-label">vs</span>
+          </div>
+
+          <div class="form-group">
+            <label for="strategy-2">Strategy 2</label>
+            <select id="strategy-2" name="strategy2" required>
+              <!-- Populated by JavaScript -->
+            </select>
+          </div>
+        </div>
+
         <div class="form-group">
           <label for="pension-amount">Starting Pension Amount (£)</label>
           <input
@@ -36,6 +69,7 @@
           <select id="start-year" name="startYear" required>
             <!-- Populated by JavaScript -->
           </select>
+          <span id="year-constraint-notice" class="form-notice" hidden></span>
         </div>
 
         <div class="form-group">
@@ -44,7 +78,7 @@
             type="number"
             id="withdrawal-rate"
             name="withdrawalRate"
-            value="4"
+            value="5"
             min="1"
             max="10"
             step="0.5"
@@ -68,6 +102,10 @@
 
         <button type="submit" class="btn btn-primary">Calculate Comparison</button>
       </form>
+
+      <div id="advanced-settings">
+        <!-- Populated by JavaScript -->
+      </div>
     </section>
 
     <section class="results-section" aria-labelledby="results-heading">
@@ -81,6 +119,15 @@
           <div class="initial-summary" id="gold-initial"></div>
           <div class="table-container">
             <table class="results-table" id="gold-table">
+              <colgroup>
+                <col style="width: 10%;">
+                <col style="width: 15%;">
+                <col style="width: 15%;">
+                <col style="width: 14%;">
+                <col style="width: 13%;">
+                <col style="width: 14%;">
+                <col style="width: 19%;">
+              </colgroup>
               <thead>
                 <tr>
                   <th scope="col">Year</th>
@@ -102,6 +149,15 @@
           <div class="initial-summary" id="sipp-initial"></div>
           <div class="table-container">
             <table class="results-table" id="sipp-table">
+              <colgroup>
+                <col style="width: 10%;">
+                <col style="width: 15%;">
+                <col style="width: 15%;">
+                <col style="width: 14%;">
+                <col style="width: 13%;">
+                <col style="width: 14%;">
+                <col style="width: 19%;">
+              </colgroup>
               <thead>
                 <tr>
                   <th scope="col">Year</th>
@@ -136,14 +192,15 @@
       <h2 id="summary-heading">Summary Comparison</h2>
       <div id="summary-content" class="summary-grid"></div>
     </section>
+
+    <section class="disclaimers-section" aria-labelledby="disclaimers-heading" id="disclaimers-section" hidden>
+      <h2 id="disclaimers-heading" class="visually-hidden">Important Information</h2>
+      <div id="disclaimers-content"></div>
+    </section>
   </main>
 
   <footer class="footer">
-    <p>
-      <strong>Disclaimer:</strong> This tool is for educational purposes only.
-      It does not constitute financial advice. Past performance does not guarantee future results.
-      Consult a qualified financial advisor before making pension decisions.
-    </p>
+    <div id="footer-disclaimers"></div>
   </footer>
 
   <script type="module" src="/src/main.js"></script>

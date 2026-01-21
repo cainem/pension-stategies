@@ -4,10 +4,13 @@
  */
 
 import { initInputForm, disableForm, enableForm } from './components/inputForm.js';
-import { renderGoldResults, renderSippResults, clearResults, showResultsSection } from './components/resultsTable.js';
+import { renderResultsForStrategies, clearResults, showResultsSection } from './components/resultsTable.js';
 import { renderSummary, clearSummary } from './components/summary.js';
 import { renderCharts, clearCharts, showChartsSection } from './components/chart.js';
-import { compareStrategies } from './calculators/comparisonEngine.js';
+import { initAdvancedSettings, getConfig } from './components/advancedSettings.js';
+import { renderDisclaimers, initializeDisclaimers } from './components/disclaimer.js';
+import { compareStrategies, compareAnyStrategies } from './calculators/comparisonEngine.js';
+import { DEFAULTS } from './config/defaults.js';
 
 /**
  * Initialize the application
@@ -17,6 +20,12 @@ export function initApp() {
     onSubmit: handleCalculation
   });
 
+  initAdvancedSettings();
+  initializeDisclaimers();
+
+  // Auto-load results with default values
+  loadDefaultResults();
+
   console.log('Pension Strategy Comparison Tool initialized');
 }
 
@@ -24,8 +33,9 @@ export function initApp() {
  * Handle the calculation when form is submitted
  *
  * @param {Object} inputs - Validated form inputs
+ * @param {boolean} shouldScroll - Whether to scroll to results (default: true)
  */
-async function handleCalculation(inputs) {
+async function handleCalculation(inputs, shouldScroll = true) {
   try {
     disableForm();
     clearResults();
@@ -35,17 +45,37 @@ async function handleCalculation(inputs) {
     // Small delay to allow UI to update
     await new Promise(resolve => setTimeout(resolve, 10));
 
-    // Run comparison
-    const comparison = compareStrategies(
-      inputs.pensionAmount,
-      inputs.startYear,
-      inputs.withdrawalRate,
-      inputs.years
-    );
+    // Get fee configuration from advanced settings
+    const config = getConfig();
+
+    // Determine which comparison to use
+    let comparison;
+    if (inputs.strategy1 && inputs.strategy2) {
+      // Use the new generic comparison for any two strategies
+      comparison = compareAnyStrategies(
+        inputs.strategy1,
+        inputs.strategy2,
+        inputs.pensionAmount,
+        inputs.startYear,
+        inputs.withdrawalRate,
+        inputs.years,
+        config
+      );
+    } else {
+      // Fallback to legacy comparison (gold vs sp500)
+      comparison = compareStrategies(
+        inputs.pensionAmount,
+        inputs.startYear,
+        inputs.withdrawalRate,
+        inputs.years,
+        config
+      );
+      // Adapt legacy format to new format
+      comparison = adaptLegacyComparison(comparison);
+    }
 
     // Render results
-    renderGoldResults(comparison.gold);
-    renderSippResults(comparison.sipp);
+    renderResultsForStrategies(comparison);
     showResultsSection();
 
     // Render charts
@@ -55,8 +85,19 @@ async function handleCalculation(inputs) {
     // Render summary
     renderSummary(comparison);
 
-    // Scroll to results
-    scrollToResults();
+    // Render strategy-specific disclaimers
+    renderDisclaimers(
+      'disclaimers-content',
+      inputs.strategy1 || 'gold',
+      inputs.strategy2 || 'sp500',
+      inputs.startYear
+    );
+    showDisclaimersSection();
+
+    // Scroll to results (unless loading defaults on page load)
+    if (shouldScroll) {
+      scrollToResults();
+    }
 
   } catch (error) {
     console.error('Calculation error:', error);
@@ -67,12 +108,65 @@ async function handleCalculation(inputs) {
 }
 
 /**
+ * Adapt legacy comparison format to new generic format
+ *
+ * @param {Object} legacy - Legacy comparison result
+ * @returns {Object} Adapted comparison result
+ */
+function adaptLegacyComparison(legacy) {
+  return {
+    inputs: legacy.inputs,
+    strategy1: {
+      id: 'gold',
+      name: 'Physical Gold',
+      shortName: 'Gold',
+      type: 'gold',
+      result: legacy.gold,
+      metrics: legacy.summary.gold
+    },
+    strategy2: {
+      id: 'sp500',
+      name: 'S&P 500 SIPP',
+      shortName: 'S&P 500',
+      type: 'sipp',
+      result: legacy.sipp,
+      metrics: legacy.summary.sipp
+    },
+    yearlyComparison: legacy.yearlyComparison.map(y => ({
+      year: y.year,
+      strategy1: y.gold,
+      strategy2: y.sipp,
+      difference: y.difference
+    })),
+    summary: {
+      winner: legacy.summary.winner === 'gold' ? 'strategy1' : (legacy.summary.winner === 'sipp' ? 'strategy2' : 'tie'),
+      winnerName: legacy.summary.winner === 'tie' ? 'Tie' : (legacy.summary.winner === 'gold' ? 'Gold' : 'S&P 500'),
+      difference: legacy.summary.difference,
+      percentageDifference: legacy.summary.percentageDifference,
+      strategy1LeadsBy: legacy.summary.winnerLeadsBy,
+      comparison: legacy.summary.comparison
+    }
+  };
+}
+
+/**
  * Scroll to the results section
  */
 function scrollToResults() {
   const resultsSection = document.querySelector('.results-section');
   if (resultsSection) {
     resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+}
+
+/**
+ * Show the disclaimers section
+ */
+function showDisclaimersSection() {
+  const section = document.getElementById('disclaimers-section');
+  if (section) {
+    section.hidden = false;
+    section.classList.add('visible');
   }
 }
 
@@ -97,5 +191,23 @@ function hideError() {
   if (errorEl) {
     errorEl.hidden = true;
   }
+}
+
+/**
+ * Load results with default values on page load
+ */
+function loadDefaultResults() {
+  // Use default strategy selections (gold vs sp500)
+  const defaultInputs = {
+    strategy1: 'gold',
+    strategy2: 'sp500',
+    pensionAmount: DEFAULTS.pensionAmount,
+    startYear: DEFAULTS.startYear,
+    withdrawalRate: DEFAULTS.withdrawalRate,
+    years: DEFAULTS.comparisonYears
+  };
+
+  // Trigger calculation with defaults (don't scroll on initial load)
+  handleCalculation(defaultInputs, false);
 }
 

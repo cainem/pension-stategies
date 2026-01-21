@@ -64,7 +64,7 @@ describe('getGoldPrice', () => {
   });
 
   it('given_invalidYear_when_gettingPrice_then_throwsError', () => {
-    expect(() => getGoldPrice(1999)).toThrow('Gold price data not available');
+    expect(() => getGoldPrice(1979)).toThrow('Gold price data not available');
     expect(() => getGoldPrice(2027)).toThrow('Gold price data not available');
   });
 });

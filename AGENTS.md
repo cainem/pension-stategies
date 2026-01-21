@@ -7,9 +7,17 @@ This document provides guidance for AI agents working on this codebase.
 
 ## Project Overview
 
-A client-side web application comparing two UK pension withdrawal strategies:
-1. **Gold Strategy**: Withdraw pension, pay tax, buy physical gold
-2. **S&P 500 SIPP Strategy**: Keep pension invested in S&P 500 tracker ETF
+A client-side web application comparing UK pension withdrawal strategies across multiple asset classes:
+
+**Base Strategies (5):**
+1. **Physical Gold - Outside Pension**: Withdraw pension, pay tax, buy CGT-exempt physical gold
+2. **Gold ETF SIPP**: Keep pension in gold ETF within SIPP wrapper
+3. **S&P 500 SIPP**: Keep pension in S&P 500 tracker ETF within SIPP
+4. **Nasdaq 100 SIPP**: Keep pension in Nasdaq 100 tracker ETF within SIPP
+5. **FTSE 100 SIPP**: Keep pension in FTSE 100 tracker ETF within SIPP
+
+**Combined Strategies (10):**
+- 50/50 splits between any two base strategies
 
 **Key Constraint**: No server-side processing. Hosted on GitHub Pages. All calculations in JavaScript.
 
@@ -36,6 +44,7 @@ A client-side web application comparing two UK pension withdrawal strategies:
 │  - Wires components together                                │
 │  - Handles user interactions                                │
 │  - Manages calculation flow                                 │
+│  - Integrates disclaimers                                   │
 └─────────────────────────────────────────────────────────────┘
             │                   │                   │
             ▼                   ▼                   ▼
@@ -44,35 +53,73 @@ A client-side web application comparing two UK pension withdrawal strategies:
 │  ┌─────────────┐  │ │ ┌─────────────┐ │ │ ┌─────────────┐ │
 │  │ inputForm   │  │ │ │taxCalculator│ │ │ │ goldPrices  │ │
 │  ├─────────────┤  │ │ ├─────────────┤ │ │ ├─────────────┤ │
-│  │resultsTable │  │ │ │goldStrategy │ │ │ │sp500TotalRe │ │
+│  │resultsTable │  │ │ │goldStrategy │ │ │ │sp500TotalRet│ │
 │  ├─────────────┤  │ │ ├─────────────┤ │ │ ├─────────────┤ │
-│  │  summary    │  │ │ │sippStrategy │ │ │ │exchangeRates│ │
-│  └─────────────┘  │ │ ├─────────────┤ │ │ ├─────────────┤ │
-└───────────────────┘ │ │syntheticEtf │ │ │ │ ukTaxData   │ │
-                      │ └─────────────┘ │ │ └─────────────┘ │
-                      └─────────────────┘ └─────────────────┘
-                                │                   │
-                                └─────────┬─────────┘
-                                          ▼
-                              ┌─────────────────────┐
-                              │       Utils         │
-                              │  ┌───────────────┐  │
-                              │  │  formatters   │  │
-                              │  ├───────────────┤  │
-                              │  │  validators   │  │
-                              │  └───────────────┘  │
-                              └─────────────────────┘
+│  │  summary    │  │ │ │sippStrategy │ │ │ │nasdaq100TR  │ │
+│  ├─────────────┤  │ │ ├─────────────┤ │ │ ├─────────────┤ │
+│  │   chart     │  │ │ │syntheticEtf │ │ │ │ftse100TR    │ │
+│  ├─────────────┤  │ │ ├─────────────┤ │ │ ├─────────────┤ │
+│  │ disclaimer  │  │ │ │strategyReg  │ │ │ │exchangeRates│ │
+│  ├─────────────┤  │ │ ├─────────────┤ │ │ ├─────────────┤ │
+│  │advSettings  │  │ │ │compEngine   │ │ │ │ ukTaxData   │ │
+│  └─────────────┘  │ │ ├─────────────┤ │ │ └─────────────┘ │
+└───────────────────┘ │ │combinedStrat│ │ └─────────────────┘
+                      │ └─────────────┘ │
+                      └─────────────────┘
+                                │
+                                ▼
+                      ┌─────────────────────┐
+                      │       Utils         │
+                      │  ┌───────────────┐  │
+                      │  │  formatters   │  │
+                      │  ├───────────────┤  │
+                      │  │  validators   │  │
+                      │  └───────────────┘  │
+                      └─────────────────────┘
+                                │
+                                ▼
+                      ┌─────────────────────┐
+                      │       Config        │
+                      │  ┌───────────────┐  │
+                      │  │   defaults    │  │
+                      │  └───────────────┘  │
+                      └─────────────────────┘
 ```
 
 ---
 
 ## Key Features & Business Logic
 
-### 1. Tax Calculation Engine
+### 1. Strategy Registry
+
+**Location**: `src/calculators/strategyRegistry.js`
+
+**Purpose**: Central registry of all available strategies with metadata.
+
+**Key Exports**:
+```javascript
+// Strategy types
+STRATEGY_TYPES = { GOLD: 'gold', SIPP: 'sipp', COMBINED: 'combined' }
+
+// Get strategy by ID
+getStrategy(id)  // Returns strategy object or throws
+
+// Get available strategies
+getBaseStrategies()        // Returns 5 base strategies
+getCombinationStrategies() // Returns 10 combined strategies
+getAllStrategies()         // Returns all 15 strategies
+
+// Year availability
+isStrategyAvailableForYear(strategyId, year)
+getStrategyEarliestYear(strategyId)
+getStrategiesAvailableForYear(year)
+```
+
+### 2. Tax Calculation Engine
 
 **Location**: `src/calculators/taxCalculator.js`
 
-**Purpose**: Calculate UK income tax based on historical tax regimes.
+**Purpose**: Calculate UK income tax based on historical tax regimes (1980-2026).
 
 **Key Rules**:
 - Personal allowance varies by year (£4,385 in 2000 → £12,570 in 2024)
@@ -87,7 +134,7 @@ calculateIncomeTax(grossIncome, year, isPensionWithdrawal = false)
 // Returns: { grossIncome, taxFreeAmount, taxableAmount, taxPaid, netIncome, breakdown }
 ```
 
-### 2. Gold Strategy Calculator
+### 3. Gold Strategy Calculator
 
 **Location**: `src/calculators/goldStrategy.js`
 
@@ -95,9 +142,100 @@ calculateIncomeTax(grossIncome, year, isPensionWithdrawal = false)
 
 **Key Rules**:
 - Initial withdrawal: Pay income tax on full amount (25% tax-free)
-- Gold purchase: 2% transaction cost
-- Annual withdrawal: 4% of original gross amount
+- Gold purchase: 2% transaction cost (configurable)
+- Annual withdrawal: Sell gold to fund income
 - Gold sale: 2% transaction cost, NO income tax (CGT-exempt physical gold)
+- Storage fee: 0.5% per year (configurable)
+- Prices: January 1st spot price each year
+
+**Function Signature**:
+```javascript
+calculateGoldStrategy(pensionAmount, startYear, withdrawalRate, years, config)
+// Returns: { initialTax, yearlyResults[], summary }
+```
+
+### 4. SIPP Strategy Calculator
+
+**Location**: `src/calculators/sippStrategy.js`
+
+**Purpose**: Simulate keeping pension in various index tracker ETFs within SIPP.
+
+**Supported Indices**:
+- S&P 500 (USD, currency conversion required)
+- Nasdaq 100 (USD, currency conversion required)
+- FTSE 100 (GBP, no conversion)
+- Gold ETF (GBP, no conversion)
+
+**Key Rules**:
+- No initial tax (stays in SIPP)
+- 0.5% annual management fee on total balance (configurable)
+- Annual withdrawal taxed: 25% tax-free, 75% taxable as income
+- Prices: Synthetic ETF prices calculated from index total return
+
+**Function Signature**:
+```javascript
+calculateSippStrategy(pensionAmount, startYear, withdrawalRate, years, indexType, config)
+// Returns: { yearlyResults[], summary }
+```
+
+### 5. Synthetic ETF Pricing
+
+**Location**: `src/calculators/syntheticEtf.js`
+
+**Purpose**: Calculate what GBP-denominated Total Return accumulating ETFs would have been priced at historically.
+
+**Supported Indices**:
+| Index | Base Year | Base Price | Currency | Earliest Year |
+|-------|-----------|------------|----------|---------------|
+| S&P 500 | 2019 | £44.30 | USD | 1980 |
+| Nasdaq 100 | 2019 | £150.00 | USD | 1985 |
+| FTSE 100 | 2019 | £55.00 | GBP | 1984 |
+| Gold ETF | 2019 | £99.70 | GBP | 1980 |
+
+**Formula (USD indices)**:
+```
+syntheticPriceGBP = (indexValue[year] / indexValue[baseYear]) 
+                   * basePriceGBP 
+                   * (baseExchangeRate / exchangeRate[year])
+```
+
+### 6. Combined Strategy Calculator
+
+**Location**: `src/calculators/combinedStrategy.js`
+
+**Purpose**: Calculate 50/50 split strategies between any two base strategies.
+
+**Function Signature**:
+```javascript
+calculateCombinedStrategy(combinationId, pensionAmount, startYear, withdrawalRate, years, config)
+// Returns: { strategyA, strategyB, yearlyResults[], summary }
+```
+
+### 7. Comparison Engine
+
+**Location**: `src/calculators/comparisonEngine.js`
+
+**Purpose**: Compare any two strategies and determine winner.
+
+**Function Signature**:
+```javascript
+compareAnyStrategies(strategy1Id, strategy2Id, pensionAmount, startYear, withdrawalRate, years, config)
+// Returns: { strategy1, strategy2, yearlyComparison[], summary }
+```
+
+### 8. Disclaimer Component
+
+**Location**: `src/components/disclaimer.js`
+
+**Purpose**: Show relevant legal disclaimers based on selected strategies.
+
+**Disclaimers Include**:
+- General disclaimer (always shown)
+- Gold CGT exemption (for physical gold strategies)
+- Pre-2015 pension rules (when start year < 2015)
+- SIPP fees (for SIPP strategies)
+- Currency risk (for USD indices)
+- Gold ETF vs Physical Gold (when comparing gold options)
 - Prices: January 1st spot price each year
 
 **Function Signature**:
@@ -142,30 +280,64 @@ syntheticPriceGBP = (sp500TRIndex[year] / sp500TRIndex[baseYear]) * basePriceGBP
 
 ### Historical Data Structure
 
-All data modules export objects keyed by year:
+All data modules export objects keyed by year (1980-2026 where available):
 
 ```javascript
-// goldPrices.js
+// goldPrices.js - GBP per troy ounce, Jan 1st
 export const goldPrices = {
-  2000: 182.45,  // GBP per troy ounce, Jan 1st
-  2001: 175.23,
-  // ...
+  1980: 306.25,
+  // ... through 2026
 };
 
-// ukTaxData.js
+// sp500TotalReturn.js - S&P 500 Total Return Index
+export const sp500TotalReturn = {
+  1980: 135.76,
+  // ... through 2026
+};
+
+// nasdaq100TotalReturn.js - Nasdaq 100 Total Return (from 1985)
+export const nasdaq100TotalReturn = {
+  1985: 250.00,
+  // ... through 2026
+};
+
+// ftse100TotalReturn.js - FTSE 100 Total Return (from 1984)
+export const ftse100TotalReturn = {
+  1984: 1000.00,
+  // ... through 2026
+};
+
+// exchangeRates.js - GBP per USD
+export const exchangeRates = {
+  1980: 0.4297,
+  // ... through 2026
+};
+
+// ukTaxData.js - Tax bands and rates
 export const ukTaxData = {
   2000: {
     personalAllowance: 4385,
     basicRate: 0.22,
     basicRateThreshold: 28400,
     higherRate: 0.40,
-    higherRateThreshold: null, // No upper limit in 2000
-    additionalRate: null,       // Didn't exist
+    higherRateThreshold: null,
+    additionalRate: null,
     additionalRateThreshold: null
   },
-  // ...
+  // ... through 2026
 };
 ```
+
+### Data Availability by Year
+
+| Data Module | Earliest Year | Latest Year |
+|-------------|---------------|-------------|
+| Gold Prices | 1980 | 2026 |
+| S&P 500 TR | 1980 | 2026 |
+| Nasdaq 100 TR | 1985 | 2026 |
+| FTSE 100 TR | 1984 | 2026 |
+| Exchange Rates | 1980 | 2026 |
+| UK Tax Data | 1980 | 2026 |
 
 ---
 
@@ -194,10 +366,21 @@ test('given_exhaustedFunds_when_withdrawing_then_returnsExhaustedStatus', () => 
 Tests mirror the source structure:
 ```
 src/calculators/taxCalculator.js  →  tests/calculators/taxCalculator.test.js
+src/components/disclaimer.js      →  tests/components/disclaimer.test.js
 src/utils/formatters.js           →  tests/utils/formatters.test.js
 ```
 
 ### Coverage Requirements
+
+| Area | Target | Current |
+|------|--------|---------|
+| Calculators | 100% branch | 91% |
+| Components | 90% line | 10%* |
+| Data modules | 100% | 100% |
+| Utils | 100% | 100% |
+| Config | 100% | 100% |
+
+*Components have low coverage due to DOM dependencies. Core logic is tested.
 
 - **Minimum 90% line coverage**
 - **100% branch coverage for calculators**
@@ -258,9 +441,11 @@ export function calculateIncomeTax(grossIncome, year, isPensionWithdrawal = fals
 1. Update `src/data/ukTaxData.js` with new year's data
 2. Update `src/data/goldPrices.js` with Jan 1st gold price
 3. Update `src/data/sp500TotalReturn.js` with Jan 1st index value
-4. Update `src/data/exchangeRates.js` with Jan 1st GBP/USD rate
-5. Add test cases for the new year
-6. Update valid year range in validators
+4. Update `src/data/nasdaq100TotalReturn.js` with Jan 1st index value
+5. Update `src/data/ftse100TotalReturn.js` with Jan 1st index value
+6. Update `src/data/exchangeRates.js` with Jan 1st GBP/USD rate
+7. Add test cases for the new year
+8. Update valid year range in `src/config/defaults.js`
 
 ### Modifying Tax Calculation Logic
 
@@ -269,13 +454,23 @@ export function calculateIncomeTax(grossIncome, year, isPensionWithdrawal = fals
 3. Ensure all branches are covered
 4. Verify against HMRC examples if available
 
-### Adding a New Strategy
+### Adding a New Base Strategy
 
-1. Create new calculator in `src/calculators/`
-2. Create corresponding test file in `tests/calculators/`
-3. Update `app.js` to include new strategy
-4. Update `resultsTable.js` to render new strategy
-5. Update `summary.js` to include in comparison
+1. Add data module in `src/data/` if needed
+2. Add index type to `src/calculators/syntheticEtf.js` INDEX_TYPES
+3. Add strategy to `src/calculators/strategyRegistry.js` BASE_STRATEGIES
+4. Add convenience function to `src/calculators/sippStrategy.js` if SIPP-based
+5. Update `src/calculators/comparisonEngine.js` STRATEGY_TO_INDEX mapping
+6. Add combined strategies for the new base strategy
+7. Update tests for new strategy counts
+8. Update disclaimers if needed
+
+### Adding a New Combined Strategy
+
+1. Add to COMBINATION_STRATEGIES in `src/calculators/strategyRegistry.js`
+2. Ensure both component strategies exist
+3. Set earliestYear to max of both components' earliest years
+4. Update tests for new strategy count
 
 ### Fixing a Calculation Bug
 
@@ -347,7 +542,8 @@ When updating historical data, use these authoritative sources:
 
 ### "Year not found in data"
 - Check all data modules have the required year
-- Ensure year is within valid range (2000-2026)
+- Ensure year is within valid range (1980-2026)
+- Check if strategy has later earliest year (Nasdaq: 1985, FTSE: 1984)
 
 ### Tax calculation mismatch
 - Verify personal allowance for that year
@@ -355,11 +551,18 @@ When updating historical data, use these authoritative sources:
 - Verify 25% tax-free is being applied for pension withdrawals
 
 ### Synthetic ETF price seems wrong
-- Check S&P 500 TR Index value
-- Verify GBP/USD exchange rate direction
+- Check index total return value for that year
+- Verify GBP/USD exchange rate direction (for USD indices)
 - Ensure base year normalization is correct
+- Check if currency conversion is needed for the index type
 
 ### Tests failing after data update
 - Run full test suite
 - Check boundary condition tests
 - Verify no typos in data entries
+- Update strategy count expectations if adding strategies
+
+### Strategy not appearing in dropdown
+- Check strategy is in BASE_STRATEGIES or COMBINATION_STRATEGIES
+- Verify strategy has all required fields (id, name, shortName, etc.)
+- Check browser console for JavaScript errors

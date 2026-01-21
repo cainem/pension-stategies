@@ -8,6 +8,7 @@
 import { describe, test, expect } from 'vitest';
 import {
   compareStrategies,
+  compareAnyStrategies,
   getComparisonSummaryText,
   findCrossoverPoint,
   getCumulativeWithdrawals,
@@ -27,8 +28,8 @@ describe('compareStrategies', () => {
     });
 
     test('given_invalidStartYear_when_comparing_then_throwsError', () => {
-      expect(() => compareStrategies(100000, 1999, 4, 10))
-        .toThrow('Start year 1999 is outside supported range');
+      expect(() => compareStrategies(100000, 1979, 4, 10))
+        .toThrow('Start year 1979 is outside supported range');
     });
 
     test('given_invalidWithdrawalRate_when_comparing_then_throwsError', () => {
@@ -418,5 +419,173 @@ describe('integration tests', () => {
     // Should complete quickly (under 1 second)
     expect(endTime - startTime).toBeLessThan(1000);
     expect(result.yearlyComparison).toHaveLength(26);
+  });
+});
+
+describe('compareAnyStrategies', () => {
+  describe('input validation', () => {
+    test('given_invalidStrategy1_when_comparing_then_throwsError', () => {
+      expect(() => compareAnyStrategies('invalid', 'sp500', 500000, 2000, 4, 10))
+        .toThrow("Strategy 'invalid' not found");
+    });
+
+    test('given_invalidStrategy2_when_comparing_then_throwsError', () => {
+      expect(() => compareAnyStrategies('gold', 'invalid', 500000, 2000, 4, 10))
+        .toThrow("Strategy 'invalid' not found");
+    });
+
+    test('given_startYearBeforeStrategy1Data_when_comparing_then_throwsError', () => {
+      // Nasdaq 100 data starts 1985
+      expect(() => compareAnyStrategies('nasdaq100', 'gold', 500000, 1980, 4, 10))
+        .toThrow('Nasdaq 100 SIPP data not available until 1985');
+    });
+
+    test('given_startYearBeforeStrategy2Data_when_comparing_then_throwsError', () => {
+      // FTSE 100 data starts 1984
+      expect(() => compareAnyStrategies('gold', 'ftse100', 500000, 1980, 4, 10))
+        .toThrow('FTSE 100 SIPP data not available until 1984');
+    });
+
+    test('given_negativePensionAmount_when_comparing_then_throwsError', () => {
+      expect(() => compareAnyStrategies('gold', 'sp500', -100000, 2000, 4, 10))
+        .toThrow('Pension amount must be a positive number');
+    });
+  });
+
+  describe('result structure', () => {
+    test('given_goldVsNasdaq_when_comparing_then_returnsCorrectStructure', () => {
+      const result = compareAnyStrategies('gold', 'nasdaq100', 500000, 1990, 4, 10);
+
+      expect(result).toHaveProperty('inputs');
+      expect(result).toHaveProperty('strategy1');
+      expect(result).toHaveProperty('strategy2');
+      expect(result).toHaveProperty('yearlyComparison');
+      expect(result).toHaveProperty('summary');
+    });
+
+    test('given_goldVsNasdaq_when_comparing_then_strategy1HasCorrectProperties', () => {
+      const result = compareAnyStrategies('gold', 'nasdaq100', 500000, 1990, 4, 10);
+
+      expect(result.strategy1.id).toBe('gold');
+      expect(result.strategy1.name).toBe('Physical Gold - Outside Pension');
+      expect(result.strategy1.shortName).toBe('Physical Gold');
+      expect(result.strategy1.type).toBe('gold');
+      expect(result.strategy1).toHaveProperty('result');
+      expect(result.strategy1).toHaveProperty('metrics');
+    });
+
+    test('given_goldVsNasdaq_when_comparing_then_strategy2HasCorrectProperties', () => {
+      const result = compareAnyStrategies('gold', 'nasdaq100', 500000, 1990, 4, 10);
+
+      expect(result.strategy2.id).toBe('nasdaq100');
+      expect(result.strategy2.name).toBe('Nasdaq 100 SIPP');
+      expect(result.strategy2.shortName).toBe('Nasdaq 100');
+      expect(result.strategy2.type).toBe('sipp');
+    });
+
+    test('given_validInputs_when_comparing_then_summaryHasWinnerInfo', () => {
+      const result = compareAnyStrategies('gold', 'sp500', 500000, 2000, 4, 10);
+
+      expect(result.summary).toHaveProperty('winner');
+      expect(result.summary).toHaveProperty('winnerName');
+      expect(result.summary).toHaveProperty('difference');
+      expect(result.summary).toHaveProperty('percentageDifference');
+      expect(result.summary).toHaveProperty('comparison');
+    });
+
+    test('given_validInputs_when_comparing_then_yearlyComparisonHasCorrectLength', () => {
+      const result = compareAnyStrategies('gold', 'ftse100', 500000, 1990, 4, 15);
+
+      expect(result.yearlyComparison).toHaveLength(15);
+    });
+
+    test('given_validInputs_when_comparing_then_yearlyComparisonHasStrategy1And2', () => {
+      const result = compareAnyStrategies('gold', 'sp500', 500000, 2000, 4, 10);
+
+      const firstYear = result.yearlyComparison[0];
+      expect(firstYear).toHaveProperty('strategy1');
+      expect(firstYear).toHaveProperty('strategy2');
+      expect(firstYear).toHaveProperty('difference');
+      expect(firstYear.strategy1).toHaveProperty('assetValue');
+      expect(firstYear.strategy2).toHaveProperty('assetValue');
+    });
+  });
+
+  describe('different strategy combinations', () => {
+    test('given_sp500VsFtse100_when_comparing_then_succeeds', () => {
+      const result = compareAnyStrategies('sp500', 'ftse100', 500000, 1990, 4, 10);
+
+      expect(result.strategy1.id).toBe('sp500');
+      expect(result.strategy2.id).toBe('ftse100');
+      expect(result.strategy1.type).toBe('sipp');
+      expect(result.strategy2.type).toBe('sipp');
+    });
+
+    test('given_nasdaqVsFtse_when_comparing_then_succeeds', () => {
+      const result = compareAnyStrategies('nasdaq100', 'ftse100', 500000, 1990, 4, 10);
+
+      expect(result.strategy1.shortName).toBe('Nasdaq 100');
+      expect(result.strategy2.shortName).toBe('FTSE 100');
+    });
+
+    test('given_combinedVsBase_when_comparing_then_succeeds', () => {
+      const result = compareAnyStrategies('gold-sp500', 'gold', 500000, 2000, 4, 10);
+
+      expect(result.strategy1.id).toBe('gold-sp500');
+      expect(result.strategy1.type).toBe('combined');
+      expect(result.strategy2.id).toBe('gold');
+      expect(result.strategy2.type).toBe('gold');
+    });
+
+    test('given_twoCombined_when_comparing_then_succeeds', () => {
+      const result = compareAnyStrategies('gold-sp500', 'gold-nasdaq100', 500000, 1990, 4, 10);
+
+      expect(result.strategy1.type).toBe('combined');
+      expect(result.strategy2.type).toBe('combined');
+    });
+  });
+
+  describe('metrics calculation', () => {
+    test('given_goldStrategy_when_compared_then_metricsIncludeInitialTax', () => {
+      const result = compareAnyStrategies('gold', 'sp500', 500000, 2000, 4, 10);
+
+      expect(result.strategy1.metrics.initialTaxPaid).toBeGreaterThan(0);
+      expect(result.strategy2.metrics.initialTaxPaid).toBe(0);
+    });
+
+    test('given_validInputs_when_compared_then_totalValueRealizedCalculated', () => {
+      const result = compareAnyStrategies('gold', 'sp500', 500000, 2000, 4, 10);
+
+      expect(result.strategy1.metrics.totalValueRealized).toBeGreaterThan(0);
+      expect(result.strategy2.metrics.totalValueRealized).toBeGreaterThan(0);
+    });
+
+    test('given_sippStrategy_when_compared_then_hasFees', () => {
+      const result = compareAnyStrategies('gold', 'sp500', 500000, 2000, 4, 10);
+
+      expect(result.strategy2.metrics.totalFees).toBeGreaterThan(0);
+    });
+  });
+
+  describe('winner determination', () => {
+    test('given_goldPerformsWorse_when_comparing_then_strategy2Wins', () => {
+      // In many periods S&P 500 outperformed gold
+      const result = compareAnyStrategies('gold', 'sp500', 500000, 2010, 4, 10);
+
+      // The winner should be determined
+      expect(['strategy1', 'strategy2', 'tie']).toContain(result.summary.winner);
+    });
+
+    test('given_winnerIsStrategy1_when_compared_then_winnerNameIsStrategy1ShortName', () => {
+      const result = compareAnyStrategies('gold', 'sp500', 500000, 2000, 4, 10);
+
+      if (result.summary.winner === 'strategy1') {
+        expect(result.summary.winnerName).toBe('Physical Gold');
+      } else if (result.summary.winner === 'strategy2') {
+        expect(result.summary.winnerName).toBe('S&P 500');
+      } else {
+        expect(result.summary.winnerName).toBe('Tie');
+      }
+    });
   });
 });

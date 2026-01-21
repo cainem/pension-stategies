@@ -26,8 +26,11 @@ import { COSTS } from '../config/defaults.js';
  * @property {number} startGoldOunces - Gold ounces at start of year
  * @property {number} goldPricePerOunce - Gold price at start of year
  * @property {number} startValueGbp - Portfolio value at start of year
+ * @property {number} storageFee - Annual storage fee (paid by selling gold)
+ * @property {number} goldSoldForStorage - Ounces of gold sold to pay storage fee
+ * @property {number} valueAfterStorageFee - Portfolio value after storage fee
  * @property {number} withdrawalGross - Gross withdrawal amount
- * @property {number} goldSold - Ounces of gold sold for withdrawal
+ * @property {number} goldSold - Ounces of gold sold for withdrawal (excludes storage)
  * @property {number} transactionCost - Transaction cost for selling gold
  * @property {number} netWithdrawal - Net cash received after transaction cost
  * @property {number} endGoldOunces - Gold ounces at end of year
@@ -50,14 +53,26 @@ import { COSTS } from '../config/defaults.js';
  * @param {number} startYear - Year to start the strategy
  * @param {number} withdrawalRate - Annual withdrawal rate as percentage (e.g., 4 for 4%)
  * @param {number} years - Number of years to simulate
+ * @param {Object} [config] - Optional configuration to override default costs
+ * @param {number} [config.goldTransactionPercent] - Gold transaction fee percentage
+ * @param {number} [config.goldStorageFeePercent] - Gold storage fee percentage
  * @returns {GoldStrategyResult} Complete strategy results
  * @throws {Error} If inputs are invalid
  *
  * @example
  * const result = calculateGoldStrategy(500000, 2000, 4, 25);
  * console.log(result.summary.totalWithdrawn);
+ *
+ * // With custom fees
+ * const result2 = calculateGoldStrategy(500000, 2000, 4, 25, { goldTransactionPercent: 1.5 });
  */
-export function calculateGoldStrategy(pensionAmount, startYear, withdrawalRate, years) {
+export function calculateGoldStrategy(pensionAmount, startYear, withdrawalRate, years, config = {}) {
+  // Merge config with defaults
+  const costs = {
+    goldTransactionPercent: config.goldTransactionPercent ?? COSTS.goldTransactionPercent,
+    goldStorageFeePercent: config.goldStorageFeePercent ?? COSTS.goldStorageFeePercent
+  };
+
   // Validate inputs
   validateInputs(pensionAmount, startYear, withdrawalRate, years);
 
@@ -65,7 +80,7 @@ export function calculateGoldStrategy(pensionAmount, startYear, withdrawalRate, 
   const initialWithdrawal = calculateInitialWithdrawal(pensionAmount, startYear);
 
   // Step 2: Buy gold with net proceeds
-  const goldPurchase = calculateGoldPurchase(initialWithdrawal.netAmount, startYear);
+  const goldPurchase = calculateGoldPurchase(initialWithdrawal.netAmount, startYear, costs);
 
   // Step 3: Calculate annual withdrawals
   const annualWithdrawalAmount = pensionAmount * (withdrawalRate / 100);
@@ -73,7 +88,8 @@ export function calculateGoldStrategy(pensionAmount, startYear, withdrawalRate, 
     goldPurchase.goldOunces,
     startYear,
     annualWithdrawalAmount,
-    years
+    years,
+    costs
   );
 
   // Step 4: Calculate summary
@@ -142,9 +158,9 @@ function calculateInitialWithdrawal(pensionAmount, year) {
 /**
  * Calculate gold purchase with transaction costs
  */
-function calculateGoldPurchase(amountGbp, year) {
+function calculateGoldPurchase(amountGbp, year, costs) {
   const pricePerOunce = getGoldPrice(year);
-  const transactionCostRate = COSTS.goldTransactionPercent / 100;
+  const transactionCostRate = costs.goldTransactionPercent / 100;
 
   // Transaction cost is applied to the purchase
   const transactionCost = amountGbp * transactionCostRate;
@@ -162,19 +178,25 @@ function calculateGoldPurchase(amountGbp, year) {
 
 /**
  * Calculate year-by-year withdrawals from gold holdings
+ * Storage fee is deducted first by selling gold, then withdrawal
  */
-function calculateYearlyWithdrawals(startingGoldOunces, startYear, annualWithdrawal, years) {
+function calculateYearlyWithdrawals(startingGoldOunces, startYear, annualWithdrawal, years, costs) {
   const results = [];
   let currentGoldOunces = startingGoldOunces;
-  const transactionCostRate = COSTS.goldTransactionPercent / 100;
+  const transactionCostRate = costs.goldTransactionPercent / 100;
+  const storageFeeRate = costs.goldStorageFeePercent / 100;
 
   for (let i = 0; i < years; i++) {
     const year = startYear + i;
     const goldPrice = getGoldPrice(year);
     const startValue = currentGoldOunces * goldPrice;
+    const startOunces = currentGoldOunces;
 
-    // Determine status and withdrawal
+    // Determine status and initialize values
     let status = 'active';
+    let storageFee = 0;
+    let goldSoldForStorage = 0;
+    let valueAfterStorageFee = startValue;
     let withdrawalGross = annualWithdrawal;
     let goldSold = 0;
     let transactionCost = 0;
@@ -185,29 +207,57 @@ function calculateYearlyWithdrawals(startingGoldOunces, startYear, annualWithdra
       status = 'exhausted';
       withdrawalGross = 0;
     } else {
-      // Calculate how much gold to sell
-      // We need to sell enough gold to cover both withdrawal and transaction cost
-      // If we sell X ounces: X * price * (1 - txCost) = withdrawal
-      // So: X = withdrawal / (price * (1 - txCost))
-      const effectivePrice = goldPrice * (1 - transactionCostRate);
-      const ouncesNeeded = annualWithdrawal / effectivePrice;
+      // Step 1: Pay storage fee by selling gold
+      // Storage fee = portfolio value * storage rate
+      // To pay storage fee: sell gold, pay transaction cost, use proceeds for fee
+      // Fee amount needed = startValue * storageFeeRate
+      // To get F in cash after selling: sell X ounces where X * price * (1 - txCost) = F
+      storageFee = startValue * storageFeeRate;
+      const effectivePriceForStorage = goldPrice * (1 - transactionCostRate);
+      const ouncesNeededForStorage = storageFee / effectivePriceForStorage;
 
-      if (ouncesNeeded >= currentGoldOunces) {
-        // Not enough gold - sell everything
+      if (ouncesNeededForStorage >= currentGoldOunces) {
+        // Can't even pay storage fee - depleted
         status = 'depleted';
-        goldSold = currentGoldOunces;
-        const grossSaleValue = goldSold * goldPrice;
+        goldSoldForStorage = currentGoldOunces;
+        const grossSaleValue = goldSoldForStorage * goldPrice;
         transactionCost = grossSaleValue * transactionCostRate;
-        netWithdrawal = grossSaleValue - transactionCost;
-        withdrawalGross = netWithdrawal; // Actual withdrawal is what we get
+        storageFee = grossSaleValue - transactionCost; // Actual storage paid
         currentGoldOunces = 0;
+        withdrawalGross = 0;
+        netWithdrawal = 0;
+        valueAfterStorageFee = 0;
       } else {
-        // Enough gold - sell what we need
-        goldSold = ouncesNeeded;
-        const grossSaleValue = goldSold * goldPrice;
-        transactionCost = grossSaleValue * transactionCostRate;
-        netWithdrawal = grossSaleValue - transactionCost;
-        currentGoldOunces -= goldSold;
+        // Pay storage fee
+        goldSoldForStorage = ouncesNeededForStorage;
+        const storageTxCost = goldSoldForStorage * goldPrice * transactionCostRate;
+        currentGoldOunces -= goldSoldForStorage;
+        valueAfterStorageFee = currentGoldOunces * goldPrice;
+
+        // Step 2: Make annual withdrawal
+        // Calculate how much gold to sell for withdrawal
+        const effectivePrice = goldPrice * (1 - transactionCostRate);
+        const ouncesNeeded = annualWithdrawal / effectivePrice;
+
+        if (ouncesNeeded >= currentGoldOunces) {
+          // Not enough gold - sell everything
+          status = 'depleted';
+          goldSold = currentGoldOunces;
+          const grossSaleValue = goldSold * goldPrice;
+          const withdrawalTxCost = grossSaleValue * transactionCostRate;
+          transactionCost = storageTxCost + withdrawalTxCost;
+          netWithdrawal = grossSaleValue - withdrawalTxCost;
+          withdrawalGross = netWithdrawal; // Actual withdrawal is what we get
+          currentGoldOunces = 0;
+        } else {
+          // Enough gold - sell what we need
+          goldSold = ouncesNeeded;
+          const grossSaleValue = goldSold * goldPrice;
+          const withdrawalTxCost = grossSaleValue * transactionCostRate;
+          transactionCost = storageTxCost + withdrawalTxCost;
+          netWithdrawal = grossSaleValue - withdrawalTxCost;
+          currentGoldOunces -= goldSold;
+        }
       }
     }
 
@@ -215,9 +265,12 @@ function calculateYearlyWithdrawals(startingGoldOunces, startYear, annualWithdra
 
     results.push({
       year,
-      startGoldOunces: currentGoldOunces + goldSold,
+      startGoldOunces: startOunces,
       goldPricePerOunce: goldPrice,
       startValueGbp: startValue,
+      storageFee,
+      goldSoldForStorage,
+      valueAfterStorageFee,
       withdrawalGross,
       goldSold,
       transactionCost,
@@ -238,6 +291,7 @@ function calculateSummary(pensionAmount, initialWithdrawal, goldPurchase, yearly
   const totalWithdrawn = yearlyResults.reduce((sum, r) => sum + r.netWithdrawal, 0);
   const totalTransactionCosts = goldPurchase.transactionCost +
     yearlyResults.reduce((sum, r) => sum + r.transactionCost, 0);
+  const totalStorageFees = yearlyResults.reduce((sum, r) => sum + r.storageFee, 0);
 
   const activeYears = yearlyResults.filter(r => r.status === 'active').length;
   const depletedYear = yearlyResults.find(r => r.status === 'depleted');
@@ -263,6 +317,7 @@ function calculateSummary(pensionAmount, initialWithdrawal, goldPurchase, yearly
     targetAnnualWithdrawal: targetWithdrawal,
     totalWithdrawn,
     totalTransactionCosts,
+    totalStorageFees,
     finalGoldOunces,
     finalGoldValue: finalValue,
     totalValueRealized,
@@ -280,16 +335,23 @@ function calculateSummary(pensionAmount, initialWithdrawal, goldPurchase, yearly
  * @param {number} goldOunces - Starting gold ounces
  * @param {number} startYear - Starting year
  * @param {number} annualWithdrawal - Annual withdrawal amount in GBP
+ * @param {Object} [config] - Optional configuration to override default costs
  * @returns {number} Number of years until funds exhausted
  */
-export function calculateGoldYearsRemaining(goldOunces, startYear, annualWithdrawal) {
+export function calculateGoldYearsRemaining(goldOunces, startYear, annualWithdrawal, config = {}) {
   if (goldOunces <= 0) return 0;
   if (annualWithdrawal <= 0) return Infinity;
+
+  const costs = {
+    goldTransactionPercent: config.goldTransactionPercent ?? COSTS.goldTransactionPercent,
+    goldStorageFeePercent: config.goldStorageFeePercent ?? COSTS.goldStorageFeePercent
+  };
 
   let currentOunces = goldOunces;
   let years = 0;
   const maxYears = 2026 - startYear + 1;
-  const transactionCostRate = COSTS.goldTransactionPercent / 100;
+  const transactionCostRate = costs.goldTransactionPercent / 100;
+  const storageFeeRate = costs.goldStorageFeePercent / 100;
 
   for (let i = 0; i < maxYears && currentOunces > 0; i++) {
     const year = startYear + i;
@@ -297,6 +359,22 @@ export function calculateGoldYearsRemaining(goldOunces, startYear, annualWithdra
 
     const goldPrice = getGoldPrice(year);
     const effectivePrice = goldPrice * (1 - transactionCostRate);
+
+    // First deduct storage fee
+    const currentValue = currentOunces * goldPrice;
+    const storageFee = currentValue * storageFeeRate;
+    const ouncesForStorage = storageFee / effectivePrice;
+
+    if (ouncesForStorage >= currentOunces) {
+      // Can't even pay storage - partial year
+      const fractionOfYear = currentOunces / ouncesForStorage;
+      years += fractionOfYear * 0.5; // Approximate
+      break;
+    }
+
+    currentOunces -= ouncesForStorage;
+
+    // Then deduct withdrawal
     const ouncesNeeded = annualWithdrawal / effectivePrice;
 
     if (ouncesNeeded >= currentOunces) {

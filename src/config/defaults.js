@@ -4,13 +4,13 @@
 
 export const DEFAULTS = {
   pensionAmount: 500000,
-  startYear: 2000,
-  withdrawalRate: 4,
+  startYear: 2001,
+  withdrawalRate: 5,
   comparisonYears: 25
 };
 
 export const YEAR_RANGE = {
-  min: 2000,
+  min: 1980,
   max: 2026
 };
 
@@ -29,10 +29,11 @@ export const LIMITS = {
   }
 };
 
-// Transaction costs
+// Transaction costs and fees
 export const COSTS = {
-  goldTransactionPercent: 2,      // 2% buy/sell cost for gold
-  sippManagementFeePercent: 0.5   // 0.5% annual management fee
+  goldTransactionPercent: 3,       // 3% buy/sell cost for gold (realistic dealer cost)
+  goldStorageFeePercent: 0.7,      // 0.7% annual storage fee for gold
+  sippManagementFeePercent: 0.5    // 0.5% annual management fee
 };
 
 // Pension rules

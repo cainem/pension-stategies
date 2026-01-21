@@ -9,6 +9,7 @@
 
 import { getTaxData } from '../data/ukTaxData.js';
 import { isValidYear, isValidAmount } from '../utils/validators.js';
+import { YEAR_RANGE } from '../config/defaults.js';
 
 /**
  * Tax calculation result
@@ -51,7 +52,7 @@ import { isValidYear, isValidAmount } from '../utils/validators.js';
 export function calculateIncomeTax(grossIncome, year, isPensionWithdrawal = false) {
   // Validate inputs
   if (!isValidYear(year)) {
-    throw new Error(`Year ${year} is outside supported range (2000-2026)`);
+    throw new Error(`Year ${year} is outside supported range (${YEAR_RANGE.min}-${YEAR_RANGE.max})`);
   }
 
   if (!isValidAmount(grossIncome)) {
@@ -205,7 +206,7 @@ export function calculateEffectiveTaxRate(grossIncome, taxPaid) {
  */
 export function getMarginalTaxRate(grossIncome, year) {
   if (!isValidYear(year)) {
-    throw new Error(`Year ${year} is outside supported range (2000-2026)`);
+    throw new Error(`Year ${year} is outside supported range (${YEAR_RANGE.min}-${YEAR_RANGE.max})`);
   }
 
   if (grossIncome <= 0) {
@@ -242,7 +243,7 @@ export function getMarginalTaxRate(grossIncome, year) {
  */
 export function getTaxBands(year) {
   if (!isValidYear(year)) {
-    throw new Error(`Year ${year} is outside supported range (2000-2026)`);
+    throw new Error(`Year ${year} is outside supported range (${YEAR_RANGE.min}-${YEAR_RANGE.max})`);
   }
 
   const taxData = getTaxData(year);

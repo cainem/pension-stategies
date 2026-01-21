@@ -1,509 +1,525 @@
-# Implementation Plan
-## Pension Strategy Comparison Tool
+# Implementation Plan v2.0
+## Pension Strategy Comparison Tool - Multi-Strategy Expansion
 
-**Version:** 1.0
-**Date:** January 19, 2026
-
----
-
-## Technology Stack
-
-| Component | Technology | Rationale |
-|-----------|------------|-----------|
-| Framework | Vanilla JavaScript + ES6 Modules | No build step required, GitHub Pages compatible |
-| Styling | CSS3 with CSS Custom Properties | Native, no dependencies |
-| Testing | Vitest | Fast, modern, ESM-native, works with vanilla JS |
-| Build Tool | Vite | Minimal config, excellent dev experience, test integration |
-| Hosting | GitHub Pages | As specified in requirements |
+**Version:** 2.0  
+**Date:** January 20, 2026  
+**Status:** Planned
 
 ---
 
-## Project Structure
+## Executive Summary
+
+This plan extends the existing pension strategy comparison tool to support:
+- **4 base strategies**: Gold, S&P 500 SIPP, Nasdaq 100 SIPP, FTSE 100 SIPP
+- **6 combination strategies**: All 50/50 pairings of the base strategies
+- **Configurable fees**: Gold transaction, SIPP management, gold storage
+- **Enhanced disclaimers**: CGT exemption requirements, pre-2015 pension rules
+
+---
+
+## Current State
+
+The application currently supports:
+- ✅ Gold vs S&P 500 comparison
+- ✅ Historical data 1980-2026 (gold, S&P 500 TR, exchange rates, UK tax)
+- ✅ Tax calculations for all years
+- ✅ Responsive UI with comparison tables
+- ✅ Chart.js visualization
+- ✅ 322 passing tests
+
+---
+
+## Technology Stack (Unchanged)
+
+| Component | Technology |
+|-----------|------------|
+| Framework | Vanilla JavaScript + ES6 Modules |
+| Styling | CSS3 with CSS Custom Properties |
+| Testing | Vitest |
+| Build Tool | Vite |
+| Hosting | GitHub Pages |
+
+---
+
+## New Project Structure
 
 ```
 pension-strategies/
-├── index.html                    # Main entry point
-├── css/
-│   └── styles.css               # All styling
 ├── src/
-│   ├── main.js                  # Application entry point
-│   ├── app.js                   # Main application orchestration
 │   ├── config/
-│   │   └── defaults.js          # Default configuration values
+│   │   └── defaults.js              # Updated with new defaults
 │   ├── data/
-│   │   ├── goldPrices.js        # Historical gold prices (GBP)
-│   │   ├── sp500TotalReturn.js  # S&P 500 TR Index values
-│   │   ├── exchangeRates.js     # GBP/USD exchange rates
-│   │   └── ukTaxData.js         # UK tax bands and rates by year
+│   │   ├── goldPrices.js            # Existing
+│   │   ├── sp500TotalReturn.js      # Existing
+│   │   ├── nasdaq100TotalReturn.js  # NEW - Nasdaq 100 TR Index
+│   │   ├── ftse100TotalReturn.js    # NEW - FTSE 100 TR Index
+│   │   ├── exchangeRates.js         # Existing
+│   │   └── ukTaxData.js             # Existing
 │   ├── calculators/
-│   │   ├── taxCalculator.js     # UK income tax calculations
-│   │   ├── goldStrategy.js      # Gold strategy calculations
-│   │   ├── sippStrategy.js      # S&P 500 SIPP calculations
-│   │   └── syntheticEtf.js      # Synthetic VUAG price calculation
+│   │   ├── taxCalculator.js         # Existing
+│   │   ├── goldStrategy.js          # Updated (storage fee)
+│   │   ├── sippStrategy.js          # Refactored → base SIPP logic
+│   │   ├── sp500Strategy.js         # NEW - S&P 500 specific
+│   │   ├── nasdaq100Strategy.js     # NEW - Nasdaq 100 specific
+│   │   ├── ftse100Strategy.js       # NEW - FTSE 100 specific
+│   │   ├── combinedStrategy.js      # NEW - 50/50 combinations
+│   │   ├── syntheticEtf.js          # Updated for multiple indices
+│   │   ├── comparisonEngine.js      # Updated for new strategies
+│   │   └── strategyRegistry.js      # NEW - Strategy definitions
 │   ├── components/
-│   │   ├── inputForm.js         # User input form component
-│   │   ├── resultsTable.js      # Results table renderer
-│   │   └── summary.js           # Final summary component
+│   │   ├── inputForm.js             # Updated - strategy selector
+│   │   ├── advancedSettings.js      # NEW - collapsible fee config
+│   │   ├── resultsTable.js          # Updated - dynamic columns
+│   │   ├── summary.js               # Updated - dynamic summary
+│   │   ├── disclaimer.js            # NEW - legal disclaimers
+│   │   └── chart.js                 # Updated - dynamic strategies
 │   └── utils/
-│       ├── formatters.js        # Currency/number formatting
-│       └── validators.js        # Input validation
+│       ├── formatters.js            # Existing
+│       └── validators.js            # Existing
 ├── tests/
-│   ├── data/
-│   │   └── ukTaxData.test.js
-│   ├── calculators/
-│   │   ├── taxCalculator.test.js
-│   │   ├── goldStrategy.test.js
-│   │   ├── sippStrategy.test.js
-│   │   └── syntheticEtf.test.js
-│   ├── components/
-│   │   ├── inputForm.test.js
-│   │   └── resultsTable.test.js
-│   └── utils/
-│       ├── formatters.test.js
-│       └── validators.test.js
-├── docs/
-│   ├── pdd.md
-│   ├── implementation_plan.md
-│   └── AGENTS.md
-├── package.json
-├── vite.config.js
-└── README.md
+│   └── (mirrors src structure)
+└── ...
 ```
 
 ---
 
 ## Implementation Stages
 
-### Stage 1: Project Setup & Infrastructure
-**Duration:** 1 day
-**Priority:** Critical
+### Stage 1: Historical Data - Nasdaq 100 & FTSE 100
+**Duration:** 1-2 days  
+**Priority:** Critical  
+**Branch:** `feature/multi-index-data`
 
 #### Tasks:
-1. Initialize npm project with package.json
-2. Configure Vite for development and production builds
-3. Configure Vitest for testing
-4. Configure ESLint for code quality
-5. Create basic HTML structure
-6. Set up CSS with custom properties for theming
-7. Create folder structure
-8. Configure GitHub Actions for deployment
-9. Add VS Code settings for consistent development
+1. Research and collect Nasdaq 100 Total Return Index (1980-2026, Jan 1st values)
+2. Research and collect FTSE 100 Total Return Index (1980-2026, Jan 1st values)
+3. Create `nasdaq100TotalReturn.js` data module
+4. Create `ftse100TotalReturn.js` data module
+5. Write unit tests for data completeness
+
+#### Data Sources:
+| Index | Primary Source | Backup Source |
+|-------|----------------|---------------|
+| Nasdaq 100 TR | Nasdaq.com | Yahoo Finance (^NDX) |
+| FTSE 100 TR | FTSE Russell | Yahoo Finance (^FTTR) |
 
 #### Deliverables:
-- Working dev server (`npm run dev`)
-- Test runner (`npm test`)
-- Linter (`npm run lint`)
-- Build command (`npm run build`)
-- Basic responsive two-column layout
-
-#### Acceptance Criteria:
-- [ ] `npm run dev` starts local development server
-- [ ] `npm test` runs test suite
-- [ ] `npm run lint` checks code quality with no errors
-- [ ] `npm run build` creates production build
-- [ ] HTML passes W3C validation
-- [ ] CSS uses custom properties for key values
-- [ ] ESLint configured for ES6 modules
-
----
-
-### Stage 2: Historical Data Collection & Hardcoding
-**Duration:** 2 days
-**Priority:** Critical
-
-#### Tasks:
-1. Research and collect gold prices (GBP) for Jan 1st, 2000-2026
-2. Research and collect S&P 500 Total Return Index values for Jan 1st, 2000-2026
-3. Research and collect GBP/USD exchange rates for Jan 1st, 2000-2026
-4. Research UK tax history:
-   - Personal allowance by year
-   - Basic rate and threshold by year
-   - Higher rate and threshold by year
-   - Additional rate (from 2010) and threshold by year
-5. Create data modules with proper exports
-6. Document data sources in code comments
-
-#### Deliverables:
-- `goldPrices.js` - Gold spot prices
-- `sp500TotalReturn.js` - S&P 500 TR Index
-- `exchangeRates.js` - GBP/USD rates
-- `ukTaxData.js` - Complete tax regime history
-
-#### Acceptance Criteria:
-- [ ] All data files contain Jan 1st values for years 2000-2026
-- [ ] Data sources documented in comments
-- [ ] Data exported as ES6 modules
-- [ ] Unit tests verify data structure and completeness
+- `src/data/nasdaq100TotalReturn.js`
+- `src/data/ftse100TotalReturn.js`
+- `tests/data/nasdaq100TotalReturn.test.js`
+- `tests/data/ftse100TotalReturn.test.js`
 
 #### Test Cases:
 ```
-given_goldPrices_when_accessingYear2000_then_returnsValidPrice
-given_goldPrices_when_accessingAllYears_then_allYearsPresent
-given_ukTaxData_when_accessingYear2000_then_returnsCorrectPersonalAllowance
-given_ukTaxData_when_accessingYear2010_then_includesAdditionalRate
+given_nasdaq100Data_when_accessingYear1980_then_returnsValidValue
+given_nasdaq100Data_when_accessingAllYears_then_allYearsPresent1980to2026
+given_ftse100Data_when_accessingYear1980_then_returnsValidValue
+given_ftse100Data_when_accessingAllYears_then_allYearsPresent1980to2026
 ```
+
+#### Acceptance Criteria:
+- [ ] Nasdaq 100 TR data complete for 1980-2026
+- [ ] FTSE 100 TR data complete for 1980-2026
+- [ ] Data sources documented in code comments
+- [ ] Unit tests verify data structure
 
 ---
 
-### Stage 3: Tax Calculator Module
-**Duration:** 2 days
-**Priority:** Critical
+### Stage 2: Strategy Registry & Architecture
+**Duration:** 1 day  
+**Priority:** Critical  
+**Branch:** `feature/strategy-registry`
 
 #### Tasks:
-1. Implement `calculateIncomeTax(grossIncome, year)` function
-2. Handle personal allowance
-3. Handle basic rate band
-4. Handle higher rate band
-5. Handle additional rate (post-2010)
-6. Implement pension-specific tax (25% tax-free)
-7. Handle edge cases (income below personal allowance, etc.)
+1. Create `strategyRegistry.js` defining all strategies
+2. Define strategy metadata (id, name, type, dataSource, etc.)
+3. Define combination strategy pairs
+4. Update `comparisonEngine.js` to use registry
+
+#### Strategy Definitions:
+
+**Base Strategies:**
+| ID | Name | Type | Data Source |
+|----|------|------|-------------|
+| `gold` | Physical Gold | gold | goldPrices.js |
+| `sp500` | S&P 500 SIPP | sipp | sp500TotalReturn.js |
+| `nasdaq100` | Nasdaq 100 SIPP | sipp | nasdaq100TotalReturn.js |
+| `ftse100` | FTSE 100 SIPP | sipp | ftse100TotalReturn.js |
+
+**Combination Strategies:**
+| ID | Name | Components |
+|----|------|------------|
+| `gold-sp500` | 50% Gold + 50% S&P 500 | gold, sp500 |
+| `gold-nasdaq100` | 50% Gold + 50% Nasdaq 100 | gold, nasdaq100 |
+| `gold-ftse100` | 50% Gold + 50% FTSE 100 | gold, ftse100 |
+| `sp500-nasdaq100` | 50% S&P 500 + 50% Nasdaq 100 | sp500, nasdaq100 |
+| `sp500-ftse100` | 50% S&P 500 + 50% FTSE 100 | sp500, ftse100 |
+| `nasdaq100-ftse100` | 50% Nasdaq 100 + 50% FTSE 100 | nasdaq100, ftse100 |
 
 #### Deliverables:
-- `taxCalculator.js` with full tax calculation logic
-- Comprehensive test suite
-
-#### Acceptance Criteria:
-- [ ] Correctly calculates tax for all years 2000-2026
-- [ ] Handles 25% tax-free pension portion
-- [ ] Returns breakdown: { grossIncome, taxFree, taxable, taxPaid, netIncome }
-- [ ] All branches covered by unit tests
+- `src/calculators/strategyRegistry.js`
+- `tests/calculators/strategyRegistry.test.js`
 
 #### Test Cases:
 ```
-given_income10000_when_calculatingTaxFor2000_then_appliesCorrectPersonalAllowance
-given_income50000_when_calculatingTaxFor2000_then_appliesBasicAndHigherRates
-given_income200000_when_calculatingTaxFor2015_then_appliesAdditionalRate
-given_pensionWithdrawal_when_calculatingTax_then_applies25PercentTaxFree
-given_incomeZero_when_calculatingTax_then_returnsZeroTax
-given_incomeBelowAllowance_when_calculatingTax_then_returnsZeroTax
-given_incomeExactlyAtBasicThreshold_when_calculatingTax_then_noHigherRateTax
+given_strategyRegistry_when_gettingBaseStrategies_then_returns4Strategies
+given_strategyRegistry_when_getCombinationStrategies_then_returns6Strategies
+given_strategyRegistry_when_gettingStrategyById_then_returnsCorrectMetadata
+given_combinationStrategy_when_gettingComponents_then_returnsBothBaseIds
 ```
 
 ---
 
-### Stage 4: Synthetic ETF Price Calculator
-**Duration:** 1 day
-**Priority:** Critical
+### Stage 3: Synthetic ETF Calculator Refactor
+**Duration:** 1 day  
+**Priority:** Critical  
+**Branch:** `feature/multi-index-etf`
 
 #### Tasks:
-1. Implement synthetic VUAG price calculation
-2. Formula: `syntheticPrice = (sp500TRIndex / baseIndex) * baseGBP / exchangeRate`
-3. Normalize to sensible GBP unit price
-4. Create lookup function by year
+1. Refactor `syntheticEtf.js` to support multiple indices
+2. Create `getSyntheticPrice(index, year)` function
+3. Each index uses its own base year normalization
+4. FTSE 100 is already GBP-denominated (no currency conversion needed)
+
+#### Synthetic Price Formulas:
+
+**S&P 500 & Nasdaq 100 (USD → GBP):**
+```javascript
+syntheticPriceGBP = (indexValue[year] / indexValue[baseYear]) 
+                   * basePriceGBP 
+                   * (baseExchangeRate / exchangeRate[year])
+```
+
+**FTSE 100 (already GBP):**
+```javascript
+syntheticPriceGBP = (indexValue[year] / indexValue[baseYear]) * basePriceGBP
+```
 
 #### Deliverables:
-- `syntheticEtf.js` with price calculation logic
-- Test suite
-
-#### Acceptance Criteria:
-- [ ] Returns GBP price for any year 2000-2026
-- [ ] Accounts for S&P 500 total return
-- [ ] Accounts for GBP/USD exchange rate
-- [ ] Consistent scaling across all years
+- Updated `src/calculators/syntheticEtf.js`
+- Updated `tests/calculators/syntheticEtf.test.js`
 
 #### Test Cases:
 ```
-given_year2000_when_calculatingSyntheticPrice_then_returnsBasePrice
-given_year2020_when_calculatingSyntheticPrice_then_reflectsGrowth
-given_exchangeRateIncrease_when_calculatingPrice_then_reducesGBPPrice
-given_sp500Increase_when_calculatingPrice_then_increasesGBPPrice
+given_sp500Index_when_calculatingSyntheticPrice_then_appliesCurrencyConversion
+given_nasdaq100Index_when_calculatingSyntheticPrice_then_appliesCurrencyConversion
+given_ftse100Index_when_calculatingSyntheticPrice_then_noCurrencyConversion
+given_allIndices_when_calculatingPrices_then_allReturnValidGBPValues
 ```
 
 ---
 
-### Stage 5: Gold Strategy Calculator
-**Duration:** 2 days
-**Priority:** Critical
+### Stage 4: Individual Strategy Calculators
+**Duration:** 2 days  
+**Priority:** Critical  
+**Branch:** `feature/individual-strategies`
 
 #### Tasks:
-1. Implement initial pension withdrawal calculation
-   - Calculate tax on full withdrawal
-   - Apply 25% tax-free portion
-   - Deduct tax from remaining 75%
-2. Calculate gold purchase
-   - Net amount after tax
-   - Apply 2% transaction cost
-   - Calculate ounces at spot price
-3. Implement annual withdrawal calculation
-   - Calculate 4% of original gross
-   - Apply 2% transaction cost
-   - Calculate ounces sold
-   - Update remaining balance
-4. Handle fund exhaustion scenario
+1. Refactor `sippStrategy.js` into reusable base class/function
+2. Create `sp500Strategy.js` using S&P 500 data
+3. Create `nasdaq100Strategy.js` using Nasdaq 100 data
+4. Create `ftse100Strategy.js` using FTSE 100 data
+5. Update `goldStrategy.js` to support storage fee
+
+#### Gold Strategy Updates:
+```javascript
+// New parameter: storageFeePctPerYear (default 0.7%)
+// Applied annually as % of current gold value
+// Deducted by selling gold to cover the fee
+```
 
 #### Deliverables:
-- `goldStrategy.js` with complete strategy logic
-- Test suite
-
-#### Acceptance Criteria:
-- [ ] Correctly calculates initial tax and gold purchase
-- [ ] Correctly calculates annual withdrawals
-- [ ] Applies 2% transaction cost on all gold trades
-- [ ] Tracks gold ounces and GBP value
-- [ ] Handles fund exhaustion gracefully
+- Updated `src/calculators/goldStrategy.js`
+- Updated `src/calculators/sippStrategy.js` (base logic)
+- New `src/calculators/sp500Strategy.js`
+- New `src/calculators/nasdaq100Strategy.js`
+- New `src/calculators/ftse100Strategy.js`
+- Updated/new test files
 
 #### Test Cases:
 ```
-given_500000Pension_when_withdrawingIn2000_then_calculatesCorrectTax
-given_500000Pension_when_buyingGold_then_applies2PercentFee
-given_goldHoldings_when_withdrawing4Percent_then_reducesCorrectOunces
-given_lowGoldBalance_when_withdrawing_then_exhaustsFundsGracefully
-given_goldPriceIncrease_when_calculatingValue_then_reflectsNewPrice
-given_multipleYears_when_simulating_then_tracksRunningBalance
+given_goldStrategy_when_applyingStorageFee_then_reducesGoldByFeeAmount
+given_sp500Strategy_when_calculating_then_usesCorrectIndexData
+given_nasdaq100Strategy_when_calculating_then_usesCorrectIndexData
+given_ftse100Strategy_when_calculating_then_usesCorrectIndexData
+given_ftse100Strategy_when_calculating_then_noCurrencyConversion
 ```
 
 ---
 
-### Stage 6: SIPP Strategy Calculator
-**Duration:** 2 days
-**Priority:** Critical
+### Stage 5: Combined Strategy Calculator
+**Duration:** 1 day  
+**Priority:** Critical  
+**Branch:** `feature/combined-strategy`
 
 #### Tasks:
-1. Implement initial investment calculation
-   - Full amount stays in SIPP
-   - Calculate initial units at synthetic price
-2. Implement annual management fee (0.5%)
-3. Implement annual withdrawal calculation
-   - Calculate 4% of original gross
-   - Calculate tax on withdrawal (25% tax-free)
-   - Calculate units sold
-   - Update remaining balance
-4. Handle fund exhaustion scenario
+1. Create `combinedStrategy.js` for 50/50 splits
+2. Split initial pension 50/50 between two strategies
+3. Each half follows its own strategy rules
+4. Merge yearly results into combined view
+
+#### Logic:
+```javascript
+function calculateCombinedStrategy(
+  pensionAmount,
+  strategyA,
+  strategyB,
+  startYear,
+  withdrawalRate,
+  years,
+  config // fees
+) {
+  const halfPension = pensionAmount / 2;
+  const resultsA = strategyA.calculate(halfPension, ...);
+  const resultsB = strategyB.calculate(halfPension, ...);
+  return mergeResults(resultsA, resultsB);
+}
+```
 
 #### Deliverables:
-- `sippStrategy.js` with complete strategy logic
-- Test suite
-
-#### Acceptance Criteria:
-- [ ] Full pension amount invested initially
-- [ ] Correctly applies 0.5% annual management fee
-- [ ] Correctly calculates tax on withdrawals
-- [ ] Tracks units and GBP value
-- [ ] Handles fund exhaustion gracefully
+- `src/calculators/combinedStrategy.js`
+- `tests/calculators/combinedStrategy.test.js`
 
 #### Test Cases:
 ```
-given_500000Pension_when_investingIn2000_then_calculatesCorrectUnits
-given_sippBalance_when_applyingManagementFee_then_deducts0Point5Percent
-given_withdrawal_when_calculatingTax_then_applies25PercentTaxFree
-given_lowBalance_when_withdrawing_then_exhaustsFundsGracefully
-given_priceIncrease_when_calculatingValue_then_reflectsGrowth
-given_multipleYears_when_simulating_then_tracksRunningBalance
+given_combinedGoldSp500_when_calculating_then_splitsInitialPension5050
+given_combinedStrategy_when_calculating_then_mergesYearlyResults
+given_combinedStrategy_when_oneHalfExhausts_then_continuesOtherHalf
+given_combinedStrategy_when_summarizing_then_combinesBothTotals
 ```
 
 ---
 
-### Stage 7: Input Form Component
-**Duration:** 1 day
-**Priority:** High
+### Stage 6: Configurable Fees & Advanced Settings
+**Duration:** 1 day  
+**Priority:** High  
+**Branch:** `feature/configurable-fees`
 
 #### Tasks:
-1. Create form HTML structure
-2. Implement input validation
-3. Create form state management
-4. Implement change handlers
-5. Style form responsively
+1. Update `defaults.js` with new configurable values
+2. Create `advancedSettings.js` component (collapsible)
+3. Wire settings into calculation pipeline
+4. Update existing components to pass config
+
+#### New Configuration Values:
+```javascript
+export const COSTS = {
+  goldTransactionPercent: 2,        // Default 2%
+  goldStorageFeePercent: 0.7,       // NEW - Default 0.7%
+  sippManagementFeePercent: 0.5     // Default 0.5%
+};
+```
+
+#### Advanced Settings UI:
+```
+[▼ Advanced Settings]
+  ┌─────────────────────────────────────────────┐
+  │ Gold Transaction Fee:      [2.0] %          │
+  │ Gold Annual Storage Fee:   [0.7] %          │
+  │ SIPP Management Fee:       [0.5] %          │
+  └─────────────────────────────────────────────┘
+```
 
 #### Deliverables:
-- `inputForm.js` component
-- `validators.js` utility module
-- Test suites
-
-#### Acceptance Criteria:
-- [ ] All inputs have appropriate defaults
-- [ ] Validation provides clear error messages
-- [ ] Form is accessible (labels, ARIA)
-- [ ] Form is responsive
+- Updated `src/config/defaults.js`
+- New `src/components/advancedSettings.js`
+- Updated `src/app.js` to wire settings
+- `tests/components/advancedSettings.test.js`
 
 #### Test Cases:
 ```
-given_emptyPensionAmount_when_validating_then_returnsError
-given_negativeWithdrawalRate_when_validating_then_returnsError
-given_yearBefore2000_when_validating_then_returnsError
-given_validInputs_when_validating_then_returnsSuccess
-given_nonNumericInput_when_validating_then_returnsError
+given_advancedSettings_when_rendered_then_showsDefaultValues
+given_advancedSettings_when_collapsed_then_hidesInputs
+given_advancedSettings_when_feeChanged_then_emitsUpdateEvent
+given_customStorageFee_when_calculatingGold_then_usesCustomValue
 ```
 
 ---
 
-### Stage 8: Results Table Component
-**Duration:** 2 days
-**Priority:** High
+### Stage 7: Strategy Selector UI
+**Duration:** 1 day  
+**Priority:** High  
+**Branch:** `feature/strategy-selector`
 
 #### Tasks:
-1. Create table HTML structure
-2. Implement table rendering from calculation results
-3. Style tables for side-by-side display
-4. Handle "EXHAUSTED" state display
-5. Implement responsive behaviour (stack on mobile)
-6. Add row highlighting for key events
+1. Update `inputForm.js` with strategy dropdowns
+2. Add two dropdowns: "Strategy 1" and "Strategy 2"
+3. Default to Gold vs S&P 500 SIPP
+4. Group options: Base Strategies / Combined Strategies
+5. Prevent selecting same strategy for both
+
+#### UI Design:
+```
+Strategy 1: [▼ Physical Gold                    ]
+Strategy 2: [▼ S&P 500 SIPP                     ]
+
+Options (grouped):
+─── Base Strategies ───
+  Physical Gold
+  S&P 500 SIPP
+  Nasdaq 100 SIPP
+  FTSE 100 SIPP
+─── Combined (50/50) ───
+  50% Gold + 50% S&P 500
+  50% Gold + 50% Nasdaq 100
+  50% Gold + 50% FTSE 100
+  50% S&P 500 + 50% Nasdaq 100
+  50% S&P 500 + 50% FTSE 100
+  50% Nasdaq 100 + 50% FTSE 100
+```
 
 #### Deliverables:
-- `resultsTable.js` component
-- `formatters.js` utility module
-- Test suites
-
-#### Acceptance Criteria:
-- [ ] Tables display all required columns
-- [ ] Currency formatting is consistent
-- [ ] Exhausted funds clearly indicated
-- [ ] Tables are responsive
-- [ ] Tables are accessible
+- Updated `src/components/inputForm.js`
+- Updated `tests/components/inputForm.test.js`
 
 #### Test Cases:
 ```
-given_calculationResults_when_rendering_then_displaysAllYears
-given_exhaustedFunds_when_rendering_then_showsExhaustedMessage
-given_currencyValue_when_formatting_then_displaysPoundSign
-given_largeNumber_when_formatting_then_usesThousandsSeparator
-given_negativeValue_when_formatting_then_displaysCorrectly
+given_inputForm_when_rendered_then_showsTwoStrategyDropdowns
+given_inputForm_when_rendered_then_defaultsToGoldVsSp500
+given_inputForm_when_selectingSameStrategy_then_preventsSelection
+given_inputForm_when_strategyChanged_then_emitsUpdateEvent
+given_inputForm_when_rendered_then_showsGroupedOptions
 ```
 
 ---
 
-### Stage 9: Summary Component
-**Duration:** 1 day
-**Priority:** High
+### Stage 8: Dynamic Results & Summary
+**Duration:** 1-2 days  
+**Priority:** High  
+**Branch:** `feature/dynamic-results`
 
 #### Tasks:
-1. Create summary section HTML
-2. Calculate totals for each strategy:
-   - Total withdrawn
-   - Total tax paid
-   - Total fees paid
-   - Final portfolio value
-3. Display winner/comparison
+1. Update `resultsTable.js` for dynamic column headers
+2. Update `summary.js` for dynamic strategy names
+3. Update comparison engine for strategy-agnostic comparison
+4. Update chart component for dynamic strategies
+
+#### Dynamic Table Columns:
+- Gold strategies: Gold Price, Holdings (oz), Storage Fee
+- SIPP strategies: Unit Price, Units Held, Management Fee
+- Combined: Merged view with both asset types
 
 #### Deliverables:
-- `summary.js` component
-- Test suite
-
-#### Acceptance Criteria:
-- [ ] Displays all summary statistics
-- [ ] Clearly shows which strategy performed better
-- [ ] Handles exhausted funds scenario
-
-#### Test Cases:
-```
-given_completedSimulation_when_summarizing_then_calculatesCorrectTotals
-given_goldStrategyWins_when_summarizing_then_indicatesGoldBetter
-given_sippStrategyWins_when_summarizing_then_indicatesSippBetter
-given_fundsExhausted_when_summarizing_then_notesExhaustion
-```
+- Updated `src/components/resultsTable.js`
+- Updated `src/components/summary.js`
+- Updated `src/components/chart.js`
+- Updated `src/calculators/comparisonEngine.js`
+- Updated test files
 
 ---
 
-### Stage 10: Application Integration
-**Duration:** 1 day
-**Priority:** High
+### Stage 9: Disclaimers & Legal Notices
+**Duration:** 0.5 days  
+**Priority:** Medium  
+**Branch:** `feature/disclaimers`
 
 #### Tasks:
-1. Wire up form to calculators
-2. Implement "Calculate" button handler
-3. Integrate all components
-4. Add loading states
-5. Handle errors gracefully
+1. Create `disclaimer.js` component
+2. Add disclaimers to UI footer
+3. Show relevant disclaimers based on selected strategies
+
+#### Disclaimer Content:
+
+**Gold CGT Exemption:**
+> Physical gold held in the form of UK legal tender coins (e.g., Sovereigns, Britannias) is exempt from Capital Gains Tax. Gold bullion bars may also be CGT-exempt if purchased from LBMA-approved dealers. This model assumes CGT-exempt gold.
+
+**Pre-2015 Pension Rules:**
+> Prior to April 2015 ("Pension Freedoms"), full withdrawal of pension funds was restricted. Most savers were required to purchase an annuity or enter drawdown with limits. This model allows full withdrawal for historical comparison purposes only - such withdrawals would not have been possible before 2015.
+
+**General Disclaimer:**
+> This tool is for illustrative purposes only and does not constitute financial advice. Past performance does not guarantee future results. Consult a qualified financial advisor before making pension decisions.
 
 #### Deliverables:
-- `app.js` orchestration module
-- `main.js` entry point
-- Integration tests
-
-#### Acceptance Criteria:
-- [ ] Form submission triggers calculations
-- [ ] Results display correctly
-- [ ] Errors are caught and displayed
-- [ ] Application is usable end-to-end
-
-#### Test Cases:
-```
-given_validInputs_when_calculating_then_displaysResults
-given_invalidInputs_when_calculating_then_displaysErrors
-given_calculationError_when_running_then_handlesGracefully
-```
+- `src/components/disclaimer.js`
+- Updated `index.html` or `app.js` to include disclaimers
 
 ---
 
-### Stage 11: Polish & Deployment
-**Duration:** 1 day
-**Priority:** Medium
+### Stage 10: Testing & Documentation
+**Duration:** 1 day  
+**Priority:** High  
+**Branch:** `feature/testing-docs`
 
 #### Tasks:
-1. Final CSS polish
-2. Add page metadata (title, description, favicon)
-3. Add README documentation
-4. Configure GitHub Pages deployment
-5. Test production build
-6. Cross-browser testing
+1. Ensure >90% test coverage
+2. Update AGENTS.md with new architecture
+3. Update README.md with new features
+4. Update PDD.md (already done in this plan)
 
-#### Deliverables:
-- Production-ready application
-- Complete documentation
-- GitHub Pages deployment
+#### Coverage Targets:
+| Area | Target |
+|------|--------|
+| Calculators | 100% branch coverage |
+| Components | 90% line coverage |
+| Data modules | 100% completeness tests |
+| Utils | 100% coverage |
 
-#### Acceptance Criteria:
-- [ ] Site loads correctly on GitHub Pages
-- [ ] Works in Chrome, Firefox, Safari, Edge
-- [ ] Lighthouse accessibility score > 90
-- [ ] README explains usage
+---
+
+### Stage 11: Final Integration & Deployment
+**Duration:** 0.5 days  
+**Priority:** High  
+**Branch:** `main`
+
+#### Tasks:
+1. Merge all feature branches
+2. Full integration testing
+3. Visual regression check
+4. Deploy to GitHub Pages
+5. Verify production deployment
 
 ---
 
 ## Timeline Summary
 
-| Stage | Description | Duration | Dependencies |
-|-------|-------------|----------|--------------|
-| 1 | Project Setup | 1 day | None |
-| 2 | Historical Data | 2 days | Stage 1 |
-| 3 | Tax Calculator | 2 days | Stage 2 |
-| 4 | Synthetic ETF | 1 day | Stage 2 |
-| 5 | Gold Strategy | 2 days | Stages 3, 2 |
-| 6 | SIPP Strategy | 2 days | Stages 3, 4 |
-| 7 | Input Form | 1 day | Stage 1 |
-| 8 | Results Table | 2 days | Stage 1 |
-| 9 | Summary Component | 1 day | Stage 8 |
-| 10 | Integration | 1 day | Stages 5-9 |
-| 11 | Polish & Deploy | 1 day | Stage 10 |
+| Stage | Duration | Dependencies |
+|-------|----------|--------------|
+| 1. Historical Data | 1-2 days | None |
+| 2. Strategy Registry | 1 day | None |
+| 3. Synthetic ETF Refactor | 1 day | Stage 1 |
+| 4. Individual Strategies | 2 days | Stages 1, 2, 3 |
+| 5. Combined Strategy | 1 day | Stage 4 |
+| 6. Configurable Fees | 1 day | Stages 4, 5 |
+| 7. Strategy Selector UI | 1 day | Stage 2 |
+| 8. Dynamic Results | 1-2 days | Stages 4, 5, 7 |
+| 9. Disclaimers | 0.5 days | None |
+| 10. Testing & Docs | 1 day | All |
+| 11. Deployment | 0.5 days | All |
 
-**Total Estimated Duration:** 16 days
-
----
-
-## Testing Strategy
-
-### Unit Tests
-- All calculator functions
-- All utility functions
-- All validation functions
-- Data module structure
-
-### Component Tests
-- Form renders correctly
-- Table renders correctly
-- Summary renders correctly
-
-### Integration Tests
-- End-to-end calculation flow
-- Form → Calculation → Display
-
-### Test Naming Convention
-All tests follow the pattern:
-```
-given_[precondition]_when_[action]_then_[expectedResult]
-```
-
-### Coverage Target
-- Minimum 90% line coverage
-- 100% branch coverage for calculator modules
+**Total Estimated Duration:** 10-13 days
 
 ---
 
-## Risk Mitigation
+## Risk Assessment
 
-| Risk | Mitigation |
-|------|------------|
-| Incorrect historical data | Multiple source verification, documented sources |
-| Tax calculation errors | Extensive test cases, manual verification against HMRC examples |
-| Browser compatibility | Use only widely-supported ES6 features |
-| Performance with large calculations | Keep calculations simple, no complex loops |
-| GitHub Pages caching | Version assets appropriately |
+| Risk | Likelihood | Impact | Mitigation |
+|------|------------|--------|------------|
+| Nasdaq 100 data unavailable pre-1985 | Medium | Medium | Index started 1985; use proxy or limit start year |
+| FTSE 100 TR data gaps | Low | Medium | Multiple sources available |
+| Complex combined strategy logic | Medium | Low | Thorough unit testing |
+| UI complexity with 10 strategies | Medium | Medium | Clear grouping, good UX |
+
+---
+
+## Dependencies
+
+### External Data Required:
+- Nasdaq 100 Total Return Index (1985-2026)
+- FTSE 100 Total Return Index (1984-2026)
+
+### Notes:
+- Nasdaq 100 index launched January 1985 (cannot go back to 1980)
+- FTSE 100 index launched January 1984 (cannot go back to 1980)
+- May need to adjust YEAR_RANGE.min or show warnings for these indices
+
+---
+
+## Success Criteria
+
+1. ✅ All 10 strategies selectable and functional
+2. ✅ Fees configurable via advanced settings
+3. ✅ Disclaimers visible and accurate
+4. ✅ All calculations verified against manual checks
+5. ✅ >90% test coverage maintained
+6. ✅ Responsive design works on mobile
+7. ✅ No performance degradation with new strategies

@@ -10,3 +10,11 @@ export { initInputForm, getFormInputs, disableForm, enableForm } from './inputFo
 export { renderGoldResults, renderSippResults, clearResults, showResultsSection } from './resultsTable.js';
 export { renderSummary, hideSummary, clearSummary } from './summary.js';
 export { renderCharts, clearCharts, showChartsSection, hideChartsSection } from './chart.js';
+export {
+  initAdvancedSettings,
+  getSettings,
+  getConfig,
+  resetToDefaults,
+  isUsingCustomSettings,
+  setSettings
+} from './advancedSettings.js';

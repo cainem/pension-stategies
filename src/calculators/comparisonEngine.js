@@ -1,15 +1,378 @@
 /**
  * Comparison Engine
  *
- * Provides side-by-side comparison of Gold and SIPP pension strategies.
- * Combines results from both calculators into a unified comparison view.
+ * Provides side-by-side comparison of pension strategies.
+ * Supports comparing any two strategies from the registry.
  *
  * @module comparisonEngine
  */
 
 import { calculateGoldStrategy } from './goldStrategy.js';
-import { calculateSippStrategy, calculateSippAfterTaxValue } from './sippStrategy.js';
+import { calculateSippStrategy, calculateSippAfterTaxValue, INDEX_TYPES } from './sippStrategy.js';
+import { calculateCombinedStrategy } from './combinedStrategy.js';
+import { getStrategy, STRATEGY_TYPES } from './strategyRegistry.js';
 import { isValidYear, isValidAmount } from '../utils/validators.js';
+import { INDEX_TYPES as ETF_INDEX_TYPES } from './syntheticEtf.js';
+
+/**
+ * Map strategy IDs to SIPP index types
+ */
+const STRATEGY_TO_INDEX = {
+  sp500: INDEX_TYPES.SP500,
+  nasdaq100: INDEX_TYPES.NASDAQ100,
+  ftse100: INDEX_TYPES.FTSE100,
+  goldEtf: ETF_INDEX_TYPES.GOLD_ETF
+};
+
+/**
+ * Calculate any strategy (base or combined)
+ *
+ * @param {string} strategyId - Strategy ID from registry
+ * @param {number} pensionAmount - Amount to invest
+ * @param {number} startYear - Year to start
+ * @param {number} withdrawalRate - Withdrawal rate percentage
+ * @param {number} years - Number of years
+ * @param {Object} [config={}] - Fee configuration
+ * @returns {Object} Strategy result with type and normalized data
+ */
+function calculateAnyStrategy(strategyId, pensionAmount, startYear, withdrawalRate, years, config = {}) {
+  const strategy = getStrategy(strategyId);
+
+  if (strategy.type === STRATEGY_TYPES.GOLD) {
+    const result = calculateGoldStrategy(pensionAmount, startYear, withdrawalRate, years, config);
+    return {
+      strategyId,
+      strategyName: strategy.name,
+      strategyShortName: strategy.shortName,
+      type: STRATEGY_TYPES.GOLD,
+      result
+    };
+  }
+
+  if (strategy.type === STRATEGY_TYPES.SIPP) {
+    const indexType = STRATEGY_TO_INDEX[strategyId];
+    const result = calculateSippStrategy(pensionAmount, startYear, withdrawalRate, years, indexType, config);
+    return {
+      strategyId,
+      strategyName: strategy.name,
+      strategyShortName: strategy.shortName,
+      type: STRATEGY_TYPES.SIPP,
+      result
+    };
+  }
+
+  if (strategy.type === STRATEGY_TYPES.COMBINED) {
+    const result = calculateCombinedStrategy(strategyId, pensionAmount, startYear, withdrawalRate, years, config);
+    return {
+      strategyId,
+      strategyName: strategy.name,
+      strategyShortName: strategy.shortName,
+      type: STRATEGY_TYPES.COMBINED,
+      result
+    };
+  }
+
+  throw new Error(`Unknown strategy type: ${strategy.type}`);
+}
+
+/**
+ * Extract normalized yearly data from any strategy result
+ *
+ * @param {Object} strategyWrapper - Strategy wrapper with type and result
+ * @returns {Object[]} Normalized yearly data
+ */
+function extractNormalizedYearlyData(strategyWrapper) {
+  const { type, result } = strategyWrapper;
+
+  if (type === STRATEGY_TYPES.GOLD) {
+    return result.yearlyResults.map(year => ({
+      year: year.year,
+      startValue: year.startValueGbp,
+      endValue: year.endValueGbp,
+      grossWithdrawal: year.withdrawalGross,
+      netWithdrawal: year.netWithdrawal,
+      taxPaid: 0, // Gold sales CGT-exempt
+      fees: year.transactionCost + (year.storageFee || 0),
+      status: year.status,
+      raw: year
+    }));
+  }
+
+  if (type === STRATEGY_TYPES.SIPP) {
+    return result.yearlyResults.map(year => ({
+      year: year.year,
+      startValue: year.startValueGbp,
+      endValue: year.endValueGbp,
+      grossWithdrawal: year.grossWithdrawal,
+      netWithdrawal: year.netWithdrawal,
+      taxPaid: year.taxOnWithdrawal,
+      fees: year.managementFee,
+      status: year.status,
+      raw: year
+    }));
+  }
+
+  if (type === STRATEGY_TYPES.COMBINED) {
+    return result.yearlyResults.map(year => ({
+      year: year.year,
+      startValue: year.combinedStartValue,
+      endValue: year.combinedEndValue,
+      grossWithdrawal: year.combinedWithdrawal, // Net for combined
+      netWithdrawal: year.combinedWithdrawal,
+      taxPaid: 0, // Tax already factored into combined withdrawals
+      fees: 0, // Fees already factored in
+      status: year.status,
+      raw: year
+    }));
+  }
+
+  return [];
+}
+
+/**
+ * Calculate after-tax final value for any strategy
+ *
+ * @param {Object} strategyWrapper - Strategy wrapper
+ * @param {number} endYear - Final year
+ * @returns {number} After-tax final value
+ */
+function calculateAfterTaxFinalValue(strategyWrapper, endYear) {
+  const { type, result } = strategyWrapper;
+
+  if (type === STRATEGY_TYPES.GOLD) {
+    // Gold is already after-tax (CGT-exempt)
+    return result.summary.finalGoldValue;
+  }
+
+  if (type === STRATEGY_TYPES.SIPP) {
+    // SIPP needs tax calculation on remaining pot
+    const afterTax = calculateSippAfterTaxValue(result.summary.finalValue, endYear);
+    return afterTax.netValue;
+  }
+
+  if (type === STRATEGY_TYPES.COMBINED) {
+    // Combined already factors in after-tax values
+    return result.summary.finalValue;
+  }
+
+  return 0;
+}
+
+/**
+ * Calculate strategy metrics for comparison
+ *
+ * @param {Object} strategyWrapper - Strategy wrapper
+ * @param {number} afterTaxFinalValue - After-tax final value
+ * @returns {Object} Strategy metrics
+ */
+function calculateStrategyMetrics(strategyWrapper, afterTaxFinalValue) {
+  const { type, result } = strategyWrapper;
+  const summary = result.summary;
+
+  if (type === STRATEGY_TYPES.GOLD) {
+    const totalNetWithdrawn = summary.totalWithdrawn;
+    return {
+      initialTaxPaid: result.initialWithdrawal?.taxCalculation?.taxPaid || 0,
+      totalFees: summary.totalTransactionCosts + (summary.totalStorageFees || 0),
+      totalWithdrawalTax: 0,
+      totalNetWithdrawn,
+      finalAssetValue: summary.finalGoldValue,
+      finalAfterTaxValue: afterTaxFinalValue,
+      totalValueRealized: afterTaxFinalValue + totalNetWithdrawn,
+      yearsActive: result.yearlyResults.filter(y => y.status === 'active').length,
+      yearDepleted: summary.yearDepleted,
+      strategySuccessful: summary.strategySuccessful
+    };
+  }
+
+  if (type === STRATEGY_TYPES.SIPP) {
+    const totalNetWithdrawn = summary.totalNetWithdrawn;
+    return {
+      initialTaxPaid: 0,
+      totalFees: summary.totalManagementFees,
+      totalWithdrawalTax: summary.totalTaxPaid,
+      totalNetWithdrawn,
+      finalAssetValue: summary.finalValue,
+      finalAfterTaxValue: afterTaxFinalValue,
+      remainingTaxLiability: summary.finalValue - afterTaxFinalValue,
+      totalValueRealized: afterTaxFinalValue + totalNetWithdrawn,
+      yearsActive: summary.fullWithdrawalYears,
+      yearDepleted: summary.yearDepleted,
+      strategySuccessful: summary.strategySuccessful
+    };
+  }
+
+  if (type === STRATEGY_TYPES.COMBINED) {
+    const totalNetWithdrawn = summary.totalWithdrawn;
+    return {
+      initialTaxPaid: summary.totalTaxPaid || 0,
+      totalFees: summary.totalFees || 0,
+      totalWithdrawalTax: 0,
+      totalNetWithdrawn,
+      finalAssetValue: summary.finalValue,
+      finalAfterTaxValue: afterTaxFinalValue,
+      totalValueRealized: afterTaxFinalValue + totalNetWithdrawn,
+      yearsActive: result.yearlyResults.filter(y => y.status === 'active').length,
+      yearDepleted: summary.yearDepleted,
+      strategySuccessful: summary.strategySuccessful
+    };
+  }
+
+  return {};
+}
+
+/**
+ * Compare any two strategies
+ *
+ * @param {string} strategy1Id - First strategy ID
+ * @param {string} strategy2Id - Second strategy ID
+ * @param {number} pensionAmount - Starting pension pot in GBP
+ * @param {number} startYear - Year to start both strategies
+ * @param {number} withdrawalRate - Annual withdrawal rate as percentage
+ * @param {number} years - Number of years to simulate
+ * @param {Object} [config={}] - Optional configuration overrides for fees
+ * @returns {Object} Complete comparison of both strategies
+ * @throws {Error} If inputs are invalid
+ *
+ * @example
+ * const comparison = compareAnyStrategies('gold', 'nasdaq100', 500000, 2000, 4, 25);
+ */
+export function compareAnyStrategies(strategy1Id, strategy2Id, pensionAmount, startYear, withdrawalRate, years, config = {}) {
+  // Validate basic inputs
+  if (!isValidAmount(pensionAmount) || pensionAmount <= 0) {
+    throw new Error('Pension amount must be a positive number');
+  }
+
+  if (!isValidYear(startYear)) {
+    throw new Error(`Start year ${startYear} is outside supported range`);
+  }
+
+  if (typeof withdrawalRate !== 'number' || withdrawalRate <= 0 || withdrawalRate > 100) {
+    throw new Error('Withdrawal rate must be between 0 and 100');
+  }
+
+  if (typeof years !== 'number' || !Number.isInteger(years) || years < 1) {
+    throw new Error('Years must be a positive integer');
+  }
+
+  // Validate strategies exist and have data for the start year
+  const strategy1 = getStrategy(strategy1Id);
+  const strategy2 = getStrategy(strategy2Id);
+
+  if (startYear < strategy1.earliestYear) {
+    throw new Error(`${strategy1.name} data not available until ${strategy1.earliestYear}`);
+  }
+
+  if (startYear < strategy2.earliestYear) {
+    throw new Error(`${strategy2.name} data not available until ${strategy2.earliestYear}`);
+  }
+
+  const endYear = startYear + years - 1;
+  if (endYear > 2026) {
+    throw new Error(`Not enough data: comparison ends in ${endYear}, but data only available until 2026`);
+  }
+
+  // Calculate both strategies
+  const result1 = calculateAnyStrategy(strategy1Id, pensionAmount, startYear, withdrawalRate, years, config);
+  const result2 = calculateAnyStrategy(strategy2Id, pensionAmount, startYear, withdrawalRate, years, config);
+
+  // Extract normalized yearly data
+  const yearly1 = extractNormalizedYearlyData(result1);
+  const yearly2 = extractNormalizedYearlyData(result2);
+
+  // Build yearly comparison
+  const yearlyComparison = yearly1.map((y1, i) => {
+    const y2 = yearly2[i];
+    return {
+      year: y1.year,
+      strategy1: {
+        assetValue: y1.endValue,
+        grossWithdrawal: y1.grossWithdrawal,
+        netWithdrawal: y1.netWithdrawal,
+        taxPaid: y1.taxPaid,
+        fees: y1.fees,
+        status: y1.status
+      },
+      strategy2: {
+        assetValue: y2.endValue,
+        grossWithdrawal: y2.grossWithdrawal,
+        netWithdrawal: y2.netWithdrawal,
+        taxPaid: y2.taxPaid,
+        fees: y2.fees,
+        status: y2.status
+      },
+      difference: {
+        assetValue: y1.endValue - y2.endValue,
+        netWithdrawal: y1.netWithdrawal - y2.netWithdrawal,
+        strategy1LeadsBy: y1.endValue - y2.endValue
+      }
+    };
+  });
+
+  // Calculate after-tax final values
+  const afterTax1 = calculateAfterTaxFinalValue(result1, endYear);
+  const afterTax2 = calculateAfterTaxFinalValue(result2, endYear);
+
+  // Calculate metrics
+  const metrics1 = calculateStrategyMetrics(result1, afterTax1);
+  const metrics2 = calculateStrategyMetrics(result2, afterTax2);
+
+  // Determine winner
+  const difference = metrics1.totalValueRealized - metrics2.totalValueRealized;
+  const percentageDifference = metrics2.totalValueRealized > 0
+    ? (difference / metrics2.totalValueRealized) * 100
+    : 0;
+
+  let winner;
+  if (Math.abs(difference) < 100) {
+    winner = 'tie';
+  } else if (difference > 0) {
+    winner = 'strategy1';
+  } else {
+    winner = 'strategy2';
+  }
+
+  return {
+    inputs: {
+      pensionAmount,
+      startYear,
+      withdrawalRate,
+      years,
+      endYear
+    },
+    strategy1: {
+      id: strategy1Id,
+      name: strategy1.name,
+      shortName: strategy1.shortName,
+      type: result1.type,
+      result: result1.result,
+      metrics: metrics1
+    },
+    strategy2: {
+      id: strategy2Id,
+      name: strategy2.name,
+      shortName: strategy2.shortName,
+      type: result2.type,
+      result: result2.result,
+      metrics: metrics2
+    },
+    yearlyComparison,
+    summary: {
+      winner,
+      winnerName: winner === 'tie' ? 'Tie' : (winner === 'strategy1' ? strategy1.shortName : strategy2.shortName),
+      difference: Math.abs(difference),
+      percentageDifference: Math.abs(percentageDifference),
+      strategy1LeadsBy: difference,
+      comparison: {
+        initialTaxDifference: metrics1.initialTaxPaid - metrics2.initialTaxPaid,
+        totalFeesDifference: metrics1.totalFees - metrics2.totalFees,
+        totalNetWithdrawnDifference: metrics1.totalNetWithdrawn - metrics2.totalNetWithdrawn,
+        finalValueDifference: metrics1.finalAfterTaxValue - metrics2.finalAfterTaxValue,
+        totalValueDifference: metrics1.totalValueRealized - metrics2.totalValueRealized
+      }
+    }
+  };
+}
 
 /**
  * Year-by-year comparison result
@@ -37,20 +400,30 @@ import { isValidYear, isValidAmount } from '../utils/validators.js';
  * @param {number} startYear - Year to start both strategies
  * @param {number} withdrawalRate - Annual withdrawal rate as percentage
  * @param {number} years - Number of years to simulate
+ * @param {Object} [config={}] - Optional configuration overrides for fees
+ * @param {number} [config.goldTransactionPercent] - Gold transaction cost percentage
+ * @param {number} [config.goldStorageFeePercent] - Gold storage fee percentage
+ * @param {number} [config.sippManagementFeePercent] - SIPP management fee percentage
  * @returns {ComparisonResult} Complete comparison of both strategies
  * @throws {Error} If inputs are invalid
  *
  * @example
  * const comparison = compareStrategies(500000, 2000, 4, 25);
  * console.log(comparison.summary.winner);
+ *
+ * // With custom fees
+ * const customComparison = compareStrategies(500000, 2000, 4, 25, {
+ *   goldTransactionPercent: 1.5,
+ *   sippManagementFeePercent: 0.3
+ * });
  */
-export function compareStrategies(pensionAmount, startYear, withdrawalRate, years) {
+export function compareStrategies(pensionAmount, startYear, withdrawalRate, years, config = {}) {
   // Validate inputs
   validateInputs(pensionAmount, startYear, withdrawalRate, years);
 
-  // Run both strategies
-  const goldResult = calculateGoldStrategy(pensionAmount, startYear, withdrawalRate, years);
-  const sippResult = calculateSippStrategy(pensionAmount, startYear, withdrawalRate, years);
+  // Run both strategies with config
+  const goldResult = calculateGoldStrategy(pensionAmount, startYear, withdrawalRate, years, config);
+  const sippResult = calculateSippStrategy(pensionAmount, startYear, withdrawalRate, years, undefined, config);
 
   // Build year-by-year comparison
   const yearlyComparison = buildYearlyComparison(goldResult, sippResult, years);
@@ -385,6 +758,7 @@ export function getKeyInsights(comparison) {
 
 export default {
   compareStrategies,
+  compareAnyStrategies,
   getComparisonSummaryText,
   findCrossoverPoint,
   getCumulativeWithdrawals,

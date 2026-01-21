@@ -7,6 +7,12 @@
  * e.g., 2000 represents tax year 2000/01 (6 April 2000 - 5 April 2001)
  *
  * Key historical changes:
+ * - 1979: Top rate reduced from 83% to 60%
+ * - 1988: Basic rate reduced from 27% to 25%, higher rate reduced from 60% to 40%
+ * - 1992: Basic rate reduced from 25% to 24%
+ * - 1995: Basic rate reduced from 25% to 24%
+ * - 1996: Basic rate reduced from 24% to 23%
+ * - 1999: Basic rate reduced from 23% to 22%
  * - 2008: Basic rate reduced from 22% to 20%
  * - 2010: Additional rate (50%) introduced for income over £150,000
  * - 2013: Additional rate reduced to 45%
@@ -15,6 +21,193 @@
  */
 
 export const ukTaxData = {
+  // 1980s
+  1980: {
+    personalAllowance: 1375,
+    basicRate: 0.30,
+    basicRateLimit: 11250,
+    higherRate: 0.60,
+    higherRateLimit: null,
+    additionalRate: null,
+    additionalRateThreshold: null
+  },
+  1981: {
+    personalAllowance: 1375,
+    basicRate: 0.30,
+    basicRateLimit: 11250,
+    higherRate: 0.60,
+    higherRateLimit: null,
+    additionalRate: null,
+    additionalRateThreshold: null
+  },
+  1982: {
+    personalAllowance: 1565,
+    basicRate: 0.30,
+    basicRateLimit: 12800,
+    higherRate: 0.60,
+    higherRateLimit: null,
+    additionalRate: null,
+    additionalRateThreshold: null
+  },
+  1983: {
+    personalAllowance: 1785,
+    basicRate: 0.30,
+    basicRateLimit: 14600,
+    higherRate: 0.60,
+    higherRateLimit: null,
+    additionalRate: null,
+    additionalRateThreshold: null
+  },
+  1984: {
+    personalAllowance: 2005,
+    basicRate: 0.30,
+    basicRateLimit: 15400,
+    higherRate: 0.60,
+    higherRateLimit: null,
+    additionalRate: null,
+    additionalRateThreshold: null
+  },
+  1985: {
+    personalAllowance: 2205,
+    basicRate: 0.30,
+    basicRateLimit: 16200,
+    higherRate: 0.60,
+    higherRateLimit: null,
+    additionalRate: null,
+    additionalRateThreshold: null
+  },
+  1986: {
+    personalAllowance: 2335,
+    basicRate: 0.29,
+    basicRateLimit: 17200,
+    higherRate: 0.60,
+    higherRateLimit: null,
+    additionalRate: null,
+    additionalRateThreshold: null
+  },
+  1987: {
+    personalAllowance: 2425,
+    basicRate: 0.27,
+    basicRateLimit: 17900,
+    higherRate: 0.60,
+    higherRateLimit: null,
+    additionalRate: null,
+    additionalRateThreshold: null
+  },
+  1988: {
+    // Major reform: Basic rate cut to 25%, higher rate cut to 40%
+    personalAllowance: 2605,
+    basicRate: 0.25,
+    basicRateLimit: 19300,
+    higherRate: 0.40,
+    higherRateLimit: null,
+    additionalRate: null,
+    additionalRateThreshold: null
+  },
+  1989: {
+    personalAllowance: 2785,
+    basicRate: 0.25,
+    basicRateLimit: 20700,
+    higherRate: 0.40,
+    higherRateLimit: null,
+    additionalRate: null,
+    additionalRateThreshold: null
+  },
+  // 1990s
+  1990: {
+    personalAllowance: 3005,
+    basicRate: 0.25,
+    basicRateLimit: 20700,
+    higherRate: 0.40,
+    higherRateLimit: null,
+    additionalRate: null,
+    additionalRateThreshold: null
+  },
+  1991: {
+    personalAllowance: 3295,
+    basicRate: 0.25,
+    basicRateLimit: 23700,
+    higherRate: 0.40,
+    higherRateLimit: null,
+    additionalRate: null,
+    additionalRateThreshold: null
+  },
+  1992: {
+    personalAllowance: 3445,
+    basicRate: 0.25,
+    basicRateLimit: 23700,
+    higherRate: 0.40,
+    higherRateLimit: null,
+    additionalRate: null,
+    additionalRateThreshold: null
+  },
+  1993: {
+    personalAllowance: 3445,
+    basicRate: 0.25,
+    basicRateLimit: 23700,
+    higherRate: 0.40,
+    higherRateLimit: null,
+    additionalRate: null,
+    additionalRateThreshold: null
+  },
+  1994: {
+    personalAllowance: 3525,
+    basicRate: 0.25,
+    basicRateLimit: 23700,
+    higherRate: 0.40,
+    higherRateLimit: null,
+    additionalRate: null,
+    additionalRateThreshold: null
+  },
+  1995: {
+    personalAllowance: 3525,
+    basicRate: 0.25,
+    basicRateLimit: 24300,
+    higherRate: 0.40,
+    higherRateLimit: null,
+    additionalRate: null,
+    additionalRateThreshold: null
+  },
+  1996: {
+    // Basic rate reduced to 24%
+    personalAllowance: 3765,
+    basicRate: 0.24,
+    basicRateLimit: 25500,
+    higherRate: 0.40,
+    higherRateLimit: null,
+    additionalRate: null,
+    additionalRateThreshold: null
+  },
+  1997: {
+    personalAllowance: 3765,
+    basicRate: 0.24,
+    basicRateLimit: 26100,
+    higherRate: 0.40,
+    higherRateLimit: null,
+    additionalRate: null,
+    additionalRateThreshold: null
+  },
+  1998: {
+    // Basic rate reduced to 23%
+    personalAllowance: 4045,
+    basicRate: 0.23,
+    basicRateLimit: 26100,
+    higherRate: 0.40,
+    higherRateLimit: null,
+    additionalRate: null,
+    additionalRateThreshold: null
+  },
+  1999: {
+    // Basic rate reduced to 22%
+    personalAllowance: 4195,
+    basicRate: 0.22,
+    basicRateLimit: 27100,
+    higherRate: 0.40,
+    higherRateLimit: null,
+    additionalRate: null,
+    additionalRateThreshold: null
+  },
+  // 2000s
   2000: {
     personalAllowance: 4385,
     basicRate: 0.22,

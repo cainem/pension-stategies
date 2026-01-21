@@ -1,18 +1,23 @@
 /**
  * SIPP Strategy Calculator Tests
  *
- * Tests for simulating pension kept invested in S&P 500 tracker within SIPP.
+ * Tests for simulating pension kept invested in equity trackers within SIPP.
+ * Supports multiple indices: S&P 500, Nasdaq 100, FTSE 100.
  * All tests follow the naming convention: given_[precondition]_when_[action]_then_[expectedResult]
  */
 
 import { describe, test, expect } from 'vitest';
 import {
   calculateSippStrategy,
+  calculateSP500SippStrategy,
+  calculateNasdaq100SippStrategy,
+  calculateFTSE100SippStrategy,
   calculateSippYearsRemaining,
   getSippValue,
-  calculateSippAfterTaxValue
+  calculateSippAfterTaxValue,
+  INDEX_TYPES
 } from '../../src/calculators/sippStrategy.js';
-import { getSyntheticEtfPrice } from '../../src/calculators/syntheticEtf.js';
+import { getSyntheticPrice, getSyntheticEtfPrice } from '../../src/calculators/syntheticEtf.js';
 import { COSTS } from '../../src/config/defaults.js';
 
 describe('calculateSippStrategy', () => {
@@ -28,8 +33,8 @@ describe('calculateSippStrategy', () => {
     });
 
     test('given_invalidStartYear_when_calculating_then_throwsError', () => {
-      expect(() => calculateSippStrategy(100000, 1999, 4, 10))
-        .toThrow('Start year 1999 is outside supported range');
+      expect(() => calculateSippStrategy(100000, 1979, 4, 10))
+        .toThrow('Start year 1979 is outside supported range');
     });
 
     test('given_invalidWithdrawalRate_when_calculating_then_throwsError', () => {
@@ -279,7 +284,7 @@ describe('calculateSippYearsRemaining', () => {
 
 describe('getSippValue', () => {
   test('given_invalidYear_when_valuing_then_throwsError', () => {
-    expect(() => getSippValue(100, 1999)).toThrow('outside supported range');
+    expect(() => getSippValue(100, 1979)).toThrow('outside supported range');
   });
 
   test('given_validInputs_when_valuing_then_calculatesCorrectly', () => {
@@ -298,7 +303,7 @@ describe('getSippValue', () => {
 
 describe('calculateSippAfterTaxValue', () => {
   test('given_invalidYear_when_calculating_then_throwsError', () => {
-    expect(() => calculateSippAfterTaxValue(100000, 1999)).toThrow('outside supported range');
+    expect(() => calculateSippAfterTaxValue(100000, 1979)).toThrow('outside supported range');
   });
 
   test('given_validValue_when_calculating_then_applies25PercentTaxFree', () => {
@@ -378,5 +383,306 @@ describe('integration tests', () => {
     expect(sippResult.summary.totalTaxPaid).toBeGreaterThan(0);
     expect(sippResult.summary.totalManagementFees).toBeGreaterThan(0);
     expect(sippResult.summary.totalNetWithdrawn).toBeGreaterThan(0);
+  });
+});
+
+describe('multi-index support', () => {
+  describe('index type parameter', () => {
+    test('given_noIndexType_when_calculating_then_defaultsToSP500', () => {
+      const result = calculateSippStrategy(100000, 2000, 4, 5);
+
+      expect(result.indexType).toBe(INDEX_TYPES.SP500);
+      expect(result.indexName).toBe('S&P 500');
+    });
+
+    test('given_sp500IndexType_when_calculating_then_usesSP500', () => {
+      const result = calculateSippStrategy(100000, 2000, 4, 5, INDEX_TYPES.SP500);
+
+      expect(result.indexType).toBe(INDEX_TYPES.SP500);
+      expect(result.indexName).toBe('S&P 500');
+    });
+
+    test('given_nasdaq100IndexType_when_calculating_then_usesNasdaq100', () => {
+      const result = calculateSippStrategy(100000, 1990, 4, 5, INDEX_TYPES.NASDAQ100);
+
+      expect(result.indexType).toBe(INDEX_TYPES.NASDAQ100);
+      expect(result.indexName).toBe('Nasdaq 100');
+    });
+
+    test('given_ftse100IndexType_when_calculating_then_usesFTSE100', () => {
+      const result = calculateSippStrategy(100000, 1990, 4, 5, INDEX_TYPES.FTSE100);
+
+      expect(result.indexType).toBe(INDEX_TYPES.FTSE100);
+      expect(result.indexName).toBe('FTSE 100');
+    });
+
+    test('given_invalidIndexType_when_calculating_then_throwsError', () => {
+      expect(() => calculateSippStrategy(100000, 2000, 4, 5, 'invalid'))
+        .toThrow('Unknown index type');
+    });
+  });
+
+  describe('index data availability', () => {
+    test('given_nasdaq100_when_startYear1984_then_throwsError', () => {
+      // Nasdaq 100 data starts from 1985
+      expect(() => calculateSippStrategy(100000, 1984, 4, 5, INDEX_TYPES.NASDAQ100))
+        .toThrow('Nasdaq 100 data not available for year 1984');
+    });
+
+    test('given_ftse100_when_startYear1983_then_throwsError', () => {
+      // FTSE 100 data starts from 1984
+      expect(() => calculateSippStrategy(100000, 1983, 4, 5, INDEX_TYPES.FTSE100))
+        .toThrow('FTSE 100 data not available for year 1983');
+    });
+
+    test('given_nasdaq100_when_startYear1985_then_succeeds', () => {
+      const result = calculateSippStrategy(100000, 1985, 4, 5, INDEX_TYPES.NASDAQ100);
+      expect(result.yearlyResults).toHaveLength(5);
+    });
+
+    test('given_ftse100_when_startYear1984_then_succeeds', () => {
+      const result = calculateSippStrategy(100000, 1984, 4, 5, INDEX_TYPES.FTSE100);
+      expect(result.yearlyResults).toHaveLength(5);
+    });
+  });
+
+  describe('convenience functions', () => {
+    test('given_sp500Convenience_when_calculating_then_sameAsExplicitSP500', () => {
+      const convenience = calculateSP500SippStrategy(100000, 2000, 4, 5);
+      const explicit = calculateSippStrategy(100000, 2000, 4, 5, INDEX_TYPES.SP500);
+
+      expect(convenience.indexType).toBe(explicit.indexType);
+      expect(convenience.summary.totalNetWithdrawn).toBeCloseTo(explicit.summary.totalNetWithdrawn, 2);
+    });
+
+    test('given_nasdaq100Convenience_when_calculating_then_usesNasdaq100', () => {
+      const result = calculateNasdaq100SippStrategy(100000, 1990, 4, 5);
+
+      expect(result.indexType).toBe(INDEX_TYPES.NASDAQ100);
+      expect(result.indexName).toBe('Nasdaq 100');
+    });
+
+    test('given_ftse100Convenience_when_calculating_then_usesFTSE100', () => {
+      const result = calculateFTSE100SippStrategy(100000, 1990, 4, 5);
+
+      expect(result.indexType).toBe(INDEX_TYPES.FTSE100);
+      expect(result.indexName).toBe('FTSE 100');
+    });
+  });
+
+  describe('index-specific pricing', () => {
+    test('given_differentIndices_when_calculating_then_useDifferentPrices', () => {
+      const sp500Result = calculateSippStrategy(100000, 2000, 4, 5, INDEX_TYPES.SP500);
+      const ftseResult = calculateSippStrategy(100000, 2000, 4, 5, INDEX_TYPES.FTSE100);
+
+      // Different indices should have different ETF prices
+      expect(sp500Result.initialInvestment.etfPriceAtStart)
+        .not.toBe(ftseResult.initialInvestment.etfPriceAtStart);
+    });
+
+    test('given_sameIndex_when_calculating_then_matchesSyntheticPrice', () => {
+      const result = calculateSippStrategy(100000, 2010, 4, 5, INDEX_TYPES.SP500);
+      const expectedPrice = getSyntheticPrice(2010, INDEX_TYPES.SP500);
+
+      expect(result.initialInvestment.etfPriceAtStart).toBe(expectedPrice);
+    });
+
+    test('given_nasdaq100_when_calculating_then_usesNasdaqPrices', () => {
+      const result = calculateSippStrategy(100000, 2010, 4, 5, INDEX_TYPES.NASDAQ100);
+      const expectedPrice = getSyntheticPrice(2010, INDEX_TYPES.NASDAQ100);
+
+      expect(result.initialInvestment.etfPriceAtStart).toBe(expectedPrice);
+    });
+
+    test('given_ftse100_when_calculating_then_usesFTSEPrices', () => {
+      const result = calculateSippStrategy(100000, 2010, 4, 5, INDEX_TYPES.FTSE100);
+      const expectedPrice = getSyntheticPrice(2010, INDEX_TYPES.FTSE100);
+
+      expect(result.initialInvestment.etfPriceAtStart).toBe(expectedPrice);
+    });
+  });
+
+  describe('performance comparison', () => {
+    test('given_nasdaq100_when_2010to2025_then_showsGrowth', () => {
+      const result = calculateSippStrategy(500000, 2010, 4, 15, INDEX_TYPES.NASDAQ100);
+
+      // Nasdaq had strong growth in this period
+      expect(result.summary.strategySuccessful).toBe(true);
+      expect(result.summary.finalValue).toBeGreaterThan(0);
+    });
+
+    test('given_ftse100_when_2000to2025_then_calculatesCorrectly', () => {
+      const result = calculateSippStrategy(500000, 2000, 4, 25, INDEX_TYPES.FTSE100);
+
+      // FTSE 100 should work correctly
+      expect(result.yearlyResults).toHaveLength(25);
+      expect(result.summary.totalNetWithdrawn).toBeGreaterThan(0);
+    });
+
+    test('given_allIndices_when_sameInputs_then_produceDifferentResults', () => {
+      const sp500 = calculateSippStrategy(500000, 2000, 4, 25, INDEX_TYPES.SP500);
+      const ftse = calculateSippStrategy(500000, 2000, 4, 25, INDEX_TYPES.FTSE100);
+
+      // Different indices should produce different final values
+      // (due to different performance)
+      expect(sp500.summary.finalValue).not.toBeCloseTo(ftse.summary.finalValue, 0);
+    });
+  });
+
+  describe('getSippValue with index type', () => {
+    test('given_sp500Index_when_valuing_then_usesCorrectPrice', () => {
+      const units = 100;
+      const year = 2020;
+      const expectedPrice = getSyntheticPrice(year, INDEX_TYPES.SP500);
+      const expectedValue = units * expectedPrice;
+
+      expect(getSippValue(units, year, INDEX_TYPES.SP500)).toBeCloseTo(expectedValue, 2);
+    });
+
+    test('given_nasdaq100Index_when_valuing_then_usesCorrectPrice', () => {
+      const units = 100;
+      const year = 2020;
+      const expectedPrice = getSyntheticPrice(year, INDEX_TYPES.NASDAQ100);
+      const expectedValue = units * expectedPrice;
+
+      expect(getSippValue(units, year, INDEX_TYPES.NASDAQ100)).toBeCloseTo(expectedValue, 2);
+    });
+
+    test('given_ftse100Index_when_valuing_then_usesCorrectPrice', () => {
+      const units = 100;
+      const year = 2020;
+      const expectedPrice = getSyntheticPrice(year, INDEX_TYPES.FTSE100);
+      const expectedValue = units * expectedPrice;
+
+      expect(getSippValue(units, year, INDEX_TYPES.FTSE100)).toBeCloseTo(expectedValue, 2);
+    });
+
+    test('given_noIndexType_when_valuing_then_defaultsToSP500', () => {
+      const units = 100;
+      const year = 2020;
+      const defaultValue = getSippValue(units, year);
+      const sp500Value = getSippValue(units, year, INDEX_TYPES.SP500);
+
+      expect(defaultValue).toBe(sp500Value);
+    });
+  });
+
+  describe('calculateSippYearsRemaining with index type', () => {
+    test('given_sp500Index_when_calculating_then_usesCorrectPrices', () => {
+      const years = calculateSippYearsRemaining(1000, 2020, 5000, INDEX_TYPES.SP500);
+      expect(years).toBeGreaterThan(0);
+    });
+
+    test('given_nasdaq100Index_when_calculating_then_usesCorrectPrices', () => {
+      const years = calculateSippYearsRemaining(1000, 2020, 5000, INDEX_TYPES.NASDAQ100);
+      expect(years).toBeGreaterThan(0);
+    });
+
+    test('given_ftse100Index_when_calculating_then_usesCorrectPrices', () => {
+      const years = calculateSippYearsRemaining(1000, 2020, 5000, INDEX_TYPES.FTSE100);
+      expect(years).toBeGreaterThan(0);
+    });
+
+    test('given_noIndexType_when_calculating_then_defaultsToSP500', () => {
+      const defaultYears = calculateSippYearsRemaining(1000, 2020, 5000);
+      const sp500Years = calculateSippYearsRemaining(1000, 2020, 5000, INDEX_TYPES.SP500);
+
+      expect(defaultYears).toBe(sp500Years);
+    });
+  });
+});
+
+describe('configurable fees', () => {
+  test('given_customManagementFee_when_calculating_then_usesCustomFee', () => {
+    const defaultResult = calculateSippStrategy(100000, 2020, 4, 5);
+    const customResult = calculateSippStrategy(100000, 2020, 4, 5, INDEX_TYPES.SP500, {
+      sippManagementFeePercent: 0.25 // 0.25% instead of default 0.5%
+    });
+
+    // Custom fee result should have lower management fees
+    expect(customResult.summary.totalManagementFees)
+      .toBeLessThan(defaultResult.summary.totalManagementFees);
+  });
+
+  test('given_higherManagementFee_when_calculating_then_resultsDiffer', () => {
+    const defaultResult = calculateSippStrategy(100000, 2020, 4, 5);
+    const highFeeResult = calculateSippStrategy(100000, 2020, 4, 5, INDEX_TYPES.SP500, {
+      sippManagementFeePercent: 1.0 // 1% instead of default 0.5%
+    });
+
+    // Higher fee = higher total fees
+    expect(highFeeResult.summary.totalManagementFees)
+      .toBeGreaterThan(defaultResult.summary.totalManagementFees);
+
+    // Higher fee = lower final value
+    expect(highFeeResult.summary.finalValue)
+      .toBeLessThan(defaultResult.summary.finalValue);
+  });
+
+  test('given_zeroManagementFee_when_calculating_then_noFeeDeducted', () => {
+    const result = calculateSippStrategy(100000, 2020, 4, 5, INDEX_TYPES.SP500, {
+      sippManagementFeePercent: 0
+    });
+
+    expect(result.summary.totalManagementFees).toBe(0);
+  });
+
+  test('given_emptyConfig_when_calculating_then_usesDefaults', () => {
+    const emptyConfigResult = calculateSippStrategy(100000, 2020, 4, 5, INDEX_TYPES.SP500, {});
+    const noConfigResult = calculateSippStrategy(100000, 2020, 4, 5);
+
+    // Results should be identical
+    expect(emptyConfigResult.summary.totalManagementFees)
+      .toBe(noConfigResult.summary.totalManagementFees);
+  });
+
+  test('given_customFeeWithNasdaq_when_calculating_then_usesCustomFee', () => {
+    const defaultResult = calculateSippStrategy(100000, 2000, 4, 5, INDEX_TYPES.NASDAQ100);
+    const customResult = calculateSippStrategy(100000, 2000, 4, 5, INDEX_TYPES.NASDAQ100, {
+      sippManagementFeePercent: 0.2
+    });
+
+    expect(customResult.summary.totalManagementFees)
+      .toBeLessThan(defaultResult.summary.totalManagementFees);
+  });
+
+  test('given_customFeeWithFTSE_when_calculating_then_usesCustomFee', () => {
+    const defaultResult = calculateSippStrategy(100000, 1985, 4, 5, INDEX_TYPES.FTSE100);
+    const customResult = calculateSippStrategy(100000, 1985, 4, 5, INDEX_TYPES.FTSE100, {
+      sippManagementFeePercent: 0.2
+    });
+
+    expect(customResult.summary.totalManagementFees)
+      .toBeLessThan(defaultResult.summary.totalManagementFees);
+  });
+});
+
+describe('calculateSippYearsRemaining with config', () => {
+  test('given_customManagementFee_when_calculatingYearsRemaining_then_usesCustomFee', () => {
+    const units = 100;
+    const startYear = 2020;
+    const annualWithdrawal = 10000;
+
+    const defaultYears = calculateSippYearsRemaining(units, startYear, annualWithdrawal, INDEX_TYPES.SP500);
+    const customYears = calculateSippYearsRemaining(units, startYear, annualWithdrawal, INDEX_TYPES.SP500, {
+      sippManagementFeePercent: 0.1 // Much lower than default
+    });
+
+    // Lower management fee = funds last longer
+    expect(customYears).toBeGreaterThanOrEqual(defaultYears);
+  });
+
+  test('given_zeroManagementFee_when_calculatingYearsRemaining_then_noFeeApplied', () => {
+    const units = 100;
+    const startYear = 2020;
+    const annualWithdrawal = 10000;
+
+    const zeroFeeYears = calculateSippYearsRemaining(units, startYear, annualWithdrawal, INDEX_TYPES.SP500, {
+      sippManagementFeePercent: 0
+    });
+    const defaultYears = calculateSippYearsRemaining(units, startYear, annualWithdrawal, INDEX_TYPES.SP500);
+
+    // Zero fee should result in equal or more years
+    expect(zeroFeeYears).toBeGreaterThanOrEqual(defaultYears);
   });
 });
