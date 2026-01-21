@@ -2,7 +2,7 @@ import { defineConfig } from 'vite';
 
 export default defineConfig({
   // Base URL for GitHub Pages deployment
-  base: '/pension-strategies/',
+  base: '/pension-stategies/',
 
   build: {
     outDir: 'dist',
