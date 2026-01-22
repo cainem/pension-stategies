@@ -3,7 +3,7 @@ import { resolve } from 'path';
 
 export default defineConfig({
   // Base URL for GitHub Pages deployment
-  base: '/pension-stategies/',
+  base: '/bury-it-in-the-garden/',
 
   build: {
     outDir: 'dist',
