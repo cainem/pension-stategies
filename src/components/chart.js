@@ -19,16 +19,51 @@ let withdrawalChart = null;
 
 // Chart color configurations
 const STRATEGY_COLORS = {
+  // Base strategy specific colors
   gold: {
-    border: '#D4AF37',
+    border: '#D4AF37', // Gold
     background: 'rgba(212, 175, 55, 0.1)',
     point: '#D4AF37'
   },
-  sipp: {
-    border: '#3B82F6',
+  goldEtf: {
+    border: '#F59E0B', // Amber
+    background: 'rgba(245, 158, 11, 0.1)',
+    point: '#F59E0B'
+  },
+  sp500: {
+    border: '#3B82F6', // Blue
     background: 'rgba(59, 130, 246, 0.1)',
     point: '#3B82F6'
   },
+  nasdaq100: {
+    border: '#8B5CF6', // Purple
+    background: 'rgba(139, 92, 246, 0.1)',
+    point: '#8B5CF6'
+  },
+  ftse100: {
+    border: '#10B981', // Emerald
+    background: 'rgba(16, 185, 129, 0.1)',
+    point: '#10B981'
+  },
+  usTreasury: {
+    border: '#64748B', // Slate
+    background: 'rgba(100, 116, 139, 0.1)',
+    point: '#64748B'
+  },
+
+  // Fallback colors by series index (to ensure differentiation)
+  series1: {
+    border: '#2563EB', // Blue 600
+    background: 'rgba(37, 99, 235, 0.1)',
+    point: '#2563EB'
+  },
+  series2: {
+    border: '#E11D48', // Rose 600
+    background: 'rgba(225, 29, 72, 0.1)',
+    point: '#E11D48'
+  },
+
+  // Combination fallback
   combined: {
     border: '#8B5CF6',
     background: 'rgba(139, 92, 246, 0.1)',
@@ -39,8 +74,19 @@ const STRATEGY_COLORS = {
 /**
  * Get chart color configuration for a strategy
  */
-function getStrategyColor(type) {
-  return STRATEGY_COLORS[type] || STRATEGY_COLORS.sipp;
+function getStrategyColor(type, id, seriesIndex) {
+  // 1. Try specific ID match for base strategies
+  if (id && STRATEGY_COLORS[id]) {
+    return STRATEGY_COLORS[id];
+  }
+
+  // 2. If it's a combined strategy, return a specific color or series default
+  if (type === 'combined') {
+    return seriesIndex === 1 ? STRATEGY_COLORS.series1 : STRATEGY_COLORS.series2;
+  }
+
+  // 3. Fallback to series default to ensure differentiation
+  return seriesIndex === 1 ? STRATEGY_COLORS.series1 : STRATEGY_COLORS.series2;
 }
 
 /**
@@ -53,16 +99,16 @@ function normalizeComparisonData(comparison) {
     return {
       labels: yearlyComparison.map(y => y.year),
       series1: {
-        name: strategy1.shortName,
+        name: strategy1.shortName || strategy1.name,
         values: yearlyComparison.map(y => y.strategy1.assetValue),
         withdrawals: yearlyComparison.map(y => y.strategy1.netWithdrawal),
-        colors: getStrategyColor(strategy1.type)
+        colors: getStrategyColor(strategy1.type, strategy1.id, 1)
       },
       series2: {
-        name: strategy2.shortName,
+        name: strategy2.shortName || strategy2.name,
         values: yearlyComparison.map(y => y.strategy2.assetValue),
         withdrawals: yearlyComparison.map(y => y.strategy2.netWithdrawal),
-        colors: getStrategyColor(strategy2.type)
+        colors: getStrategyColor(strategy2.type, strategy2.id, 2)
       }
     };
   }
@@ -75,13 +121,13 @@ function normalizeComparisonData(comparison) {
       name: 'Gold Strategy',
       values: yearlyComparison.map(y => y.gold.assetValue),
       withdrawals: yearlyComparison.map(y => y.gold.netWithdrawal),
-      colors: getStrategyColor('gold')
+      colors: getStrategyColor('gold', 'gold', 1)
     },
     series2: {
       name: 'S&P 500 SIPP',
       values: yearlyComparison.map(y => y.sipp.assetValue),
       withdrawals: yearlyComparison.map(y => y.sipp.netWithdrawal),
-      colors: getStrategyColor('sipp')
+      colors: getStrategyColor('sipp', 'sp500', 2)
     }
   };
 }
