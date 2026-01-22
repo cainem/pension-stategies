@@ -425,6 +425,13 @@ export function calculateGoldEtfSippStrategy(pensionAmount, startYear, withdrawa
   return calculateSippStrategy(pensionAmount, startYear, withdrawalRate, years, INDEX_TYPES.GOLD_ETF);
 }
 
+/**
+ * Calculate US Long Treasury SIPP strategy (annuity proxy)
+ */
+export function calculateUSTreasurySippStrategy(pensionAmount, startYear, withdrawalRate, years) {
+  return calculateSippStrategy(pensionAmount, startYear, withdrawalRate, years, INDEX_TYPES.US_TREASURY);
+}
+
 // Re-export INDEX_TYPES for convenience
 export { INDEX_TYPES };
 
@@ -434,6 +441,7 @@ export default {
   calculateNasdaq100SippStrategy,
   calculateFTSE100SippStrategy,
   calculateGoldEtfSippStrategy,
+  calculateUSTreasurySippStrategy,
   calculateSippYearsRemaining,
   getSippValue,
   calculateSippAfterTaxValue,

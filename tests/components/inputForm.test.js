@@ -19,7 +19,7 @@ import { YEAR_RANGE } from '../../src/config/defaults.js';
 
 describe('Strategy Selection Integration', () => {
   describe('Strategy Registry for Form Population', () => {
-    test('given_strategyRegistry_when_checkingBaseStrategies_then_hasFiveStrategies', () => {
+    test('given_strategyRegistry_when_checkingBaseStrategies_then_hasSixStrategies', () => {
       const baseStrategies = Object.keys(BASE_STRATEGIES);
 
       expect(baseStrategies).toContain('gold');
@@ -27,10 +27,11 @@ describe('Strategy Selection Integration', () => {
       expect(baseStrategies).toContain('sp500');
       expect(baseStrategies).toContain('nasdaq100');
       expect(baseStrategies).toContain('ftse100');
-      expect(baseStrategies.length).toBe(5);
+      expect(baseStrategies).toContain('usTreasury');
+      expect(baseStrategies.length).toBe(6);
     });
 
-    test('given_strategyRegistry_when_checkingCombinedStrategies_then_hasTenStrategies', () => {
+    test('given_strategyRegistry_when_checkingCombinedStrategies_then_has15Strategies', () => {
       const combinedStrategies = Object.keys(COMBINATION_STRATEGIES);
 
       expect(combinedStrategies).toContain('gold-sp500');
@@ -43,7 +44,8 @@ describe('Strategy Selection Integration', () => {
       expect(combinedStrategies).toContain('goldEtf-nasdaq100');
       expect(combinedStrategies).toContain('goldEtf-ftse100');
       expect(combinedStrategies).toContain('gold-goldEtf');
-      expect(combinedStrategies.length).toBe(10);
+      expect(combinedStrategies).toContain('gold-usTreasury');
+      expect(combinedStrategies.length).toBe(15);
     });
 
     test('given_eachStrategy_when_checked_then_hasRequiredProperties', () => {

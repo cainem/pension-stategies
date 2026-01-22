@@ -47,7 +47,8 @@ import { isValidYear, isValidAmount } from '../utils/validators.js';
 const STRATEGY_TO_INDEX = {
   sp500: INDEX_TYPES.SP500,
   nasdaq100: INDEX_TYPES.NASDAQ100,
-  ftse100: INDEX_TYPES.FTSE100
+  ftse100: INDEX_TYPES.FTSE100,
+  usTreasury: INDEX_TYPES.US_TREASURY
 };
 
 /**

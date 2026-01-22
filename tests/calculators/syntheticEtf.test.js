@@ -334,12 +334,16 @@ describe('INDEX_TYPES and INDEX_CONFIG', () => {
     expect(INDEX_TYPES.SP500).toBe('sp500');
     expect(INDEX_TYPES.NASDAQ100).toBe('nasdaq100');
     expect(INDEX_TYPES.FTSE100).toBe('ftse100');
+    expect(INDEX_TYPES.GOLD_ETF).toBe('goldEtf');
+    expect(INDEX_TYPES.US_TREASURY).toBe('usTreasury');
   });
 
   test('given_indexConfig_when_checking_then_hasAllIndices', () => {
     expect(INDEX_CONFIG[INDEX_TYPES.SP500]).toBeDefined();
     expect(INDEX_CONFIG[INDEX_TYPES.NASDAQ100]).toBeDefined();
     expect(INDEX_CONFIG[INDEX_TYPES.FTSE100]).toBeDefined();
+    expect(INDEX_CONFIG[INDEX_TYPES.GOLD_ETF]).toBeDefined();
+    expect(INDEX_CONFIG[INDEX_TYPES.US_TREASURY]).toBeDefined();
   });
 
   test('given_sp500Config_when_checking_then_requiresCurrencyConversion', () => {
@@ -438,6 +442,41 @@ describe('getSyntheticPrice multi-index', () => {
       // This is a conceptual test - we verify no errors occur
       const price = getSyntheticPrice(2010, INDEX_TYPES.FTSE100);
       expect(price).toBeGreaterThan(0);
+    });
+  });
+
+  describe('US Treasury', () => {
+    test('given_usTreasury_when_gettingPrice2019_then_equalsBasePrice', () => {
+      const price = getSyntheticPrice(2019, INDEX_TYPES.US_TREASURY);
+      expect(price).toBeCloseTo(INDEX_CONFIG[INDEX_TYPES.US_TREASURY].basePriceGbp, 2);
+    });
+
+    test('given_usTreasury_when_gettingPrice1980_then_works', () => {
+      const price = getSyntheticPrice(1980, INDEX_TYPES.US_TREASURY);
+      expect(price).toBeGreaterThan(0);
+    });
+
+    test('given_usTreasury_when_checking2008_then_showsFlightToSafety', () => {
+      // 2008 financial crisis should show Treasury gains
+      const price2007 = getSyntheticPrice(2007, INDEX_TYPES.US_TREASURY);
+      const price2008 = getSyntheticPrice(2008, INDEX_TYPES.US_TREASURY);
+      expect(price2008).toBeGreaterThan(price2007);
+    });
+
+    test('given_usTreasury_when_checking2023_then_showsRateHikeImpact', () => {
+      // 2022-2023 rate hikes devastated long bonds
+      const price2022 = getSyntheticPrice(2022, INDEX_TYPES.US_TREASURY);
+      const price2023 = getSyntheticPrice(2023, INDEX_TYPES.US_TREASURY);
+      expect(price2023).toBeLessThan(price2022);
+    });
+
+    test('given_usTreasuryConfig_when_checking_then_requiresCurrencyConversion', () => {
+      expect(INDEX_CONFIG[INDEX_TYPES.US_TREASURY].requiresCurrencyConversion).toBe(true);
+      expect(INDEX_CONFIG[INDEX_TYPES.US_TREASURY].currency).toBe('USD');
+    });
+
+    test('given_usTreasuryConfig_when_checking_then_hasCorrectEarliestYear', () => {
+      expect(INDEX_CONFIG[INDEX_TYPES.US_TREASURY].earliestYear).toBe(1980);
     });
   });
 

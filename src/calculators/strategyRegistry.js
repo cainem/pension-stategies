@@ -108,6 +108,24 @@ export const BASE_STRATEGIES = {
       onAnnualWithdrawal: true,
       onFinalValue: true
     }
+  },
+
+  usTreasury: {
+    id: 'usTreasury',
+    name: 'US Long Treasury SIPP',
+    shortName: 'US Treasury',
+    type: STRATEGY_TYPES.SIPP,
+    description: 'Keep pension invested in US 20+ year Treasury bond ETF within SIPP (annuity proxy)',
+    dataSource: 'usLongTreasuryTotalReturn',
+    currency: 'USD',
+    requiresCurrencyConversion: true,
+    earliestYear: 1980,
+    fees: ['managementFee'],
+    taxEvents: {
+      onInitialWithdrawal: false,
+      onAnnualWithdrawal: true,
+      onFinalValue: true
+    }
   }
 };
 
@@ -224,6 +242,62 @@ export const COMBINATION_STRATEGIES = {
     components: ['gold', 'goldEtf'],
     splitRatio: [0.5, 0.5],
     earliestYear: 1980
+  },
+
+  // US Long Treasury combined strategies (annuity proxy)
+  'gold-usTreasury': {
+    id: 'gold-usTreasury',
+    name: '50% Gold + 50% US Treasury',
+    shortName: 'Gold/Treasury',
+    type: STRATEGY_TYPES.COMBINED,
+    description: 'Split pension 50/50 between gold and US Treasury SIPP',
+    components: ['gold', 'usTreasury'],
+    splitRatio: [0.5, 0.5],
+    earliestYear: 1980
+  },
+
+  'goldEtf-usTreasury': {
+    id: 'goldEtf-usTreasury',
+    name: '50% Gold ETF + 50% US Treasury',
+    shortName: 'Gold ETF/Treasury',
+    type: STRATEGY_TYPES.COMBINED,
+    description: 'Split pension 50/50 between Gold ETF and US Treasury SIPPs',
+    components: ['goldEtf', 'usTreasury'],
+    splitRatio: [0.5, 0.5],
+    earliestYear: 1980
+  },
+
+  'sp500-usTreasury': {
+    id: 'sp500-usTreasury',
+    name: '50% S&P 500 + 50% US Treasury',
+    shortName: 'S&P/Treasury',
+    type: STRATEGY_TYPES.COMBINED,
+    description: 'Split pension 50/50 between S&P 500 and US Treasury SIPPs',
+    components: ['sp500', 'usTreasury'],
+    splitRatio: [0.5, 0.5],
+    earliestYear: 1980
+  },
+
+  'nasdaq100-usTreasury': {
+    id: 'nasdaq100-usTreasury',
+    name: '50% Nasdaq 100 + 50% US Treasury',
+    shortName: 'Nasdaq/Treasury',
+    type: STRATEGY_TYPES.COMBINED,
+    description: 'Split pension 50/50 between Nasdaq 100 and US Treasury SIPPs',
+    components: ['nasdaq100', 'usTreasury'],
+    splitRatio: [0.5, 0.5],
+    earliestYear: 1985  // Nasdaq 100 constraint
+  },
+
+  'ftse100-usTreasury': {
+    id: 'ftse100-usTreasury',
+    name: '50% FTSE 100 + 50% US Treasury',
+    shortName: 'FTSE/Treasury',
+    type: STRATEGY_TYPES.COMBINED,
+    description: 'Split pension 50/50 between FTSE 100 and US Treasury SIPPs',
+    components: ['ftse100', 'usTreasury'],
+    splitRatio: [0.5, 0.5],
+    earliestYear: 1984  // FTSE 100 constraint
   }
 };
 
