@@ -78,6 +78,19 @@ async function handleCalculation(inputs, shouldScroll = true) {
     renderResultsForStrategies(comparison);
     showResultsSection();
 
+    // Track comparison event in Google Analytics
+    if (typeof gtag === 'function') {
+      gtag('event', 'compare_strategies', {
+        'strategy_1': inputs.strategy1 || 'gold',
+        'strategy_2': inputs.strategy2 || 'sp500',
+        'start_year': inputs.startYear,
+        'pension_amount': inputs.pensionAmount,
+        'withdrawal_rate': inputs.withdrawalRate,
+        'years': inputs.years,
+        'adjust_for_inflation': config.adjustForInflation
+      });
+    }
+
     // Render charts
     renderCharts(comparison);
     showChartsSection();
