@@ -15,6 +15,7 @@
  * - 1999: Basic rate reduced from 23% to 22%
  * - 2008: Basic rate reduced from 22% to 20%
  * - 2010: Additional rate (50%) introduced for income over £150,000
+ * - 2010: Personal allowance taper introduced (reduced by £1 for every £2 over £100,000)
  * - 2013: Additional rate reduced to 45%
  * - 2010-2017: Personal allowance increased significantly
  * - 2023: Additional rate threshold reduced to £125,140
@@ -300,8 +301,9 @@ export const ukTaxData = {
     additionalRateThreshold: null
   },
   2010: {
-    // Additional rate introduced at 50%
+    // Additional rate introduced at 50%, personal allowance taper introduced
     personalAllowance: 6475,
+    personalAllowanceTaperThreshold: 100000, // PA reduced by £1 for every £2 over this
     basicRate: 0.20,
     basicRateLimit: 37400,
     higherRate: 0.40,
@@ -311,6 +313,7 @@ export const ukTaxData = {
   },
   2011: {
     personalAllowance: 7475,
+    personalAllowanceTaperThreshold: 100000,
     basicRate: 0.20,
     basicRateLimit: 35000,
     higherRate: 0.40,
@@ -320,6 +323,7 @@ export const ukTaxData = {
   },
   2012: {
     personalAllowance: 8105,
+    personalAllowanceTaperThreshold: 100000,
     basicRate: 0.20,
     basicRateLimit: 34370,
     higherRate: 0.40,
@@ -330,6 +334,7 @@ export const ukTaxData = {
   2013: {
     // Additional rate reduced to 45%
     personalAllowance: 9440,
+    personalAllowanceTaperThreshold: 100000,
     basicRate: 0.20,
     basicRateLimit: 32010,
     higherRate: 0.40,
@@ -339,6 +344,7 @@ export const ukTaxData = {
   },
   2014: {
     personalAllowance: 10000,
+    personalAllowanceTaperThreshold: 100000,
     basicRate: 0.20,
     basicRateLimit: 31865,
     higherRate: 0.40,
@@ -348,6 +354,7 @@ export const ukTaxData = {
   },
   2015: {
     personalAllowance: 10600,
+    personalAllowanceTaperThreshold: 100000,
     basicRate: 0.20,
     basicRateLimit: 31785,
     higherRate: 0.40,
@@ -357,6 +364,7 @@ export const ukTaxData = {
   },
   2016: {
     personalAllowance: 11000,
+    personalAllowanceTaperThreshold: 100000,
     basicRate: 0.20,
     basicRateLimit: 32000,
     higherRate: 0.40,
@@ -366,6 +374,7 @@ export const ukTaxData = {
   },
   2017: {
     personalAllowance: 11500,
+    personalAllowanceTaperThreshold: 100000,
     basicRate: 0.20,
     basicRateLimit: 33500,
     higherRate: 0.40,
@@ -375,6 +384,7 @@ export const ukTaxData = {
   },
   2018: {
     personalAllowance: 11850,
+    personalAllowanceTaperThreshold: 100000,
     basicRate: 0.20,
     basicRateLimit: 34500,
     higherRate: 0.40,
@@ -384,6 +394,7 @@ export const ukTaxData = {
   },
   2019: {
     personalAllowance: 12500,
+    personalAllowanceTaperThreshold: 100000,
     basicRate: 0.20,
     basicRateLimit: 37500,
     higherRate: 0.40,
@@ -393,6 +404,7 @@ export const ukTaxData = {
   },
   2020: {
     personalAllowance: 12500,
+    personalAllowanceTaperThreshold: 100000,
     basicRate: 0.20,
     basicRateLimit: 37500,
     higherRate: 0.40,
@@ -402,6 +414,7 @@ export const ukTaxData = {
   },
   2021: {
     personalAllowance: 12570,
+    personalAllowanceTaperThreshold: 100000,
     basicRate: 0.20,
     basicRateLimit: 37700,
     higherRate: 0.40,
@@ -411,6 +424,7 @@ export const ukTaxData = {
   },
   2022: {
     personalAllowance: 12570,
+    personalAllowanceTaperThreshold: 100000,
     basicRate: 0.20,
     basicRateLimit: 37700,
     higherRate: 0.40,
@@ -421,6 +435,7 @@ export const ukTaxData = {
   2023: {
     // Additional rate threshold reduced to £125,140
     personalAllowance: 12570,
+    personalAllowanceTaperThreshold: 100000,
     basicRate: 0.20,
     basicRateLimit: 37700,
     higherRate: 0.40,
@@ -430,6 +445,7 @@ export const ukTaxData = {
   },
   2024: {
     personalAllowance: 12570,
+    personalAllowanceTaperThreshold: 100000,
     basicRate: 0.20,
     basicRateLimit: 37700,
     higherRate: 0.40,
@@ -439,6 +455,7 @@ export const ukTaxData = {
   },
   2025: {
     personalAllowance: 12570,
+    personalAllowanceTaperThreshold: 100000,
     basicRate: 0.20,
     basicRateLimit: 37700,
     higherRate: 0.40,
@@ -449,6 +466,7 @@ export const ukTaxData = {
   2026: {
     // Frozen allowances continue
     personalAllowance: 12570,
+    personalAllowanceTaperThreshold: 100000,
     basicRate: 0.20,
     basicRateLimit: 37700,
     higherRate: 0.40,

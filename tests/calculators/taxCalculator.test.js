@@ -123,23 +123,26 @@ describe('calculateIncomeTax', () => {
   describe('additional rate (2024)', () => {
     test('given_incomeAboveAdditionalThreshold_when_calculating_then_appliesAdditionalRate', () => {
       // £150,000 gross (2024 threshold is £125,140)
-      // £12,570 allowance
+      // Personal allowance: £0 (fully tapered - income £50,000 over £100,000 threshold)
       // £37,700 at basic rate (20%) = £7,540
-      // £74,870 at higher rate (125140 - 12570 - 37700 = 74870) at 40% = £29,948
+      // £87,440 at higher rate (125140 - 37700 = 87440) at 40% = £34,976
       // £24,860 at additional rate (150000 - 125140 = 24860) at 45% = £11,187
       const result = calculateIncomeTax(150000, 2024);
 
+      expect(result.breakdown.personalAllowance).toBe(0);
       expect(result.breakdown.basicRateTax).toBe(7540);
-      expect(result.breakdown.higherRateTax).toBe(29948);
+      expect(result.breakdown.higherRateTax).toBe(34976);
       expect(result.breakdown.additionalRateTax).toBe(11187);
-      expect(result.taxPaid).toBe(48675);
-      expect(result.netIncome).toBe(101325);
+      expect(result.taxPaid).toBe(53703);
+      expect(result.netIncome).toBe(96297);
     });
 
     test('given_incomeExactlyAtAdditionalThreshold_when_calculating_then_noAdditionalRateTax', () => {
       // £125,140 is exactly at threshold (2024)
+      // Personal allowance: £0 (fully tapered)
       const result = calculateIncomeTax(125140, 2024);
 
+      expect(result.breakdown.personalAllowance).toBe(0);
       expect(result.breakdown.additionalRateAmount).toBe(0);
       expect(result.breakdown.additionalRateTax).toBe(0);
     });
@@ -183,15 +186,19 @@ describe('calculateIncomeTax', () => {
   describe('historical tax rates - additional rate introduction (2010)', () => {
     test('given_income200000In2010_when_calculating_then_applies50PercentAdditionalRate', () => {
       // 2010: Additional rate 50% introduced at £150,000
-      // Personal allowance £6,475, basic rate limit £37,400
+      // Personal allowance £6,475, but fully tapered at £200,000 income
+      // Personal allowance: £0 (income £100,000 over threshold, allowance reduced by £50,000)
       const result = calculateIncomeTax(200000, 2010);
 
+      // Additional rate amount = £200,000 - £150,000 = £50,000
+      // But with £0 personal allowance, the bands shift
+      expect(result.breakdown.personalAllowance).toBe(0);
       expect(result.breakdown.additionalRateAmount).toBe(50000);  // 200000 - 150000
       expect(result.breakdown.additionalRateTax).toBe(25000);     // 50000 * 0.50
     });
 
     test('given_income200000In2009_when_calculating_then_noAdditionalRate', () => {
-      // 2009: No additional rate yet
+      // 2009: No additional rate yet, and no taper yet
       const result = calculateIncomeTax(200000, 2009);
 
       expect(result.breakdown.additionalRateTax).toBe(0);
@@ -201,13 +208,126 @@ describe('calculateIncomeTax', () => {
 
   describe('historical tax rates - additional rate reduction (2013)', () => {
     test('given_income200000In2012_when_calculating_then_applies50PercentAdditionalRate', () => {
+      // 2012: Personal allowance £8,105, fully tapered at £200,000
       const result = calculateIncomeTax(200000, 2012);
+      
+      expect(result.breakdown.personalAllowance).toBe(0);
+      expect(result.breakdown.additionalRateAmount).toBe(50000);  // 200000 - 150000
       expect(result.breakdown.additionalRateTax).toBe(50000 * 0.50);  // 50% rate
     });
 
     test('given_income200000In2013_when_calculating_then_applies45PercentAdditionalRate', () => {
+      // 2013: Personal allowance £9,440, fully tapered at £200,000
       const result = calculateIncomeTax(200000, 2013);
+      
+      expect(result.breakdown.personalAllowance).toBe(0);
+      expect(result.breakdown.additionalRateAmount).toBe(50000);  // 200000 - 150000
       expect(result.breakdown.additionalRateTax).toBe(50000 * 0.45);  // 45% rate
+    });
+  });
+
+  describe('personal allowance taper (from 2010)', () => {
+    test('given_incomeExactly100000In2024_when_calculating_then_fullPersonalAllowance', () => {
+      // At exactly £100,000, no taper applies yet
+      const result = calculateIncomeTax(100000, 2024);
+      
+      expect(result.breakdown.personalAllowance).toBe(12570);
+      expect(result.taxPaid).toBe(27432); // No taper impact
+    });
+
+    test('given_income110000In2024_when_calculating_then_reducedPersonalAllowance', () => {
+      // £110,000 is £10,000 over threshold
+      // Allowance reduced by £10,000 / 2 = £5,000
+      // Effective allowance = £12,570 - £5,000 = £7,570
+      const result = calculateIncomeTax(110000, 2024);
+      
+      expect(result.breakdown.personalAllowance).toBe(7570);
+      // Taxable: £110,000 - £7,570 = £102,430
+      // Basic rate: £37,700 at 20% = £7,540
+      // Higher rate: £64,730 at 40% = £25,892
+      expect(result.breakdown.basicRateTax).toBe(7540);
+      expect(result.breakdown.higherRateTax).toBe(25892);
+      expect(result.taxPaid).toBe(33432);
+    });
+
+    test('given_income112570In2024_when_calculating_then_halfwayTapered', () => {
+      // £112,570 is £12,570 over threshold
+      // Allowance reduced by £12,570 / 2 = £6,285
+      // Effective allowance = £12,570 - £6,285 = £6,285
+      const result = calculateIncomeTax(112570, 2024);
+      
+      expect(result.breakdown.personalAllowance).toBe(6285);
+    });
+
+    test('given_income125140In2024_when_calculating_then_zeroPersonalAllowance', () => {
+      // £125,140 is £25,140 over threshold (exactly 2 * £12,570)
+      // Allowance reduced by £25,140 / 2 = £12,570
+      // Effective allowance = £12,570 - £12,570 = £0
+      const result = calculateIncomeTax(125140, 2024);
+      
+      expect(result.breakdown.personalAllowance).toBe(0);
+      // Taxable: £125,140 - £0 = £125,140
+      // Basic rate: £37,700 at 20% = £7,540
+      // Higher rate: £87,440 (125140 - 37700) at 40% = £34,976
+      // No additional rate (exactly at threshold)
+      expect(result.breakdown.basicRateTax).toBe(7540);
+      expect(result.breakdown.higherRateTax).toBe(34976);
+      expect(result.breakdown.additionalRateTax).toBe(0);
+      expect(result.taxPaid).toBe(42516);
+    });
+
+    test('given_income130000In2024_when_calculating_then_zeroPersonalAllowance', () => {
+      // £130,000 is well over the taper removal point
+      // Allowance should remain at £0 (can't go negative)
+      const result = calculateIncomeTax(130000, 2024);
+      
+      expect(result.breakdown.personalAllowance).toBe(0);
+    });
+
+    test('given_income150000In2024_when_calculating_then_noPersonalAllowanceAndAdditionalRate', () => {
+      // Well above taper - should have £0 allowance and pay additional rate
+      const result = calculateIncomeTax(150000, 2024);
+      
+      expect(result.breakdown.personalAllowance).toBe(0);
+      // Taxable: £150,000 - £0 = £150,000
+      // Basic rate: £37,700 at 20% = £7,540
+      // Higher rate: £87,440 (125140 - 37700) at 40% = £34,976
+      // Additional rate: £24,860 (150000 - 125140) at 45% = £11,187
+      expect(result.breakdown.basicRateTax).toBe(7540);
+      expect(result.breakdown.higherRateTax).toBe(34976);
+      expect(result.breakdown.additionalRateTax).toBe(11187);
+      expect(result.taxPaid).toBe(53703);
+    });
+
+    test('given_income110000In2009_when_calculating_then_noTaperApplied', () => {
+      // Taper was introduced in 2010, so 2009 should use full allowance
+      const result = calculateIncomeTax(110000, 2009);
+      
+      // 2009 personal allowance was £6,475
+      expect(result.breakdown.personalAllowance).toBe(6475);
+    });
+
+    test('given_income110000In2010_when_calculating_then_taperApplied', () => {
+      // First year of taper - £110,000 is £10,000 over threshold
+      // 2010 personal allowance was £6,475
+      // Allowance reduced by £10,000 / 2 = £5,000
+      // Effective allowance = £6,475 - £5,000 = £1,475
+      const result = calculateIncomeTax(110000, 2010);
+      
+      expect(result.breakdown.personalAllowance).toBe(1475);
+    });
+
+    test('given_pensionWithdrawal150000In2024_when_calculating_then_taperAppliedToTaxablePortion', () => {
+      // £150,000 pension withdrawal
+      // 25% tax-free = £37,500
+      // 75% taxable = £112,500 (this is used for taper calculation)
+      // Taper: £112,500 - £100,000 = £12,500 over threshold
+      // Allowance reduced by £12,500 / 2 = £6,250
+      // Effective allowance = £12,570 - £6,250 = £6,320
+      const result = calculateIncomeTax(150000, 2024, true);
+      
+      expect(result.taxFreeAmount).toBe(37500);
+      expect(result.breakdown.personalAllowance).toBe(6320);
     });
   });
 

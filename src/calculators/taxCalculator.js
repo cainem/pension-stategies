@@ -73,14 +73,15 @@ export function calculateIncomeTax(grossIncome, year, isPensionWithdrawal = fals
   // Income subject to tax rules (before personal allowance)
   const incomeForTax = grossIncome - taxFreeAmount;
 
-  // Calculate personal allowance (may be reduced for high earners - not implemented for simplicity)
-  const personalAllowance = Math.min(taxData.personalAllowance, incomeForTax);
+  // Calculate personal allowance (tapered for high earners from 2010 onwards)
+  const effectivePersonalAllowance = calculateEffectivePersonalAllowance(incomeForTax, taxData);
+  const personalAllowance = Math.min(effectivePersonalAllowance, incomeForTax);
 
   // Taxable income (after personal allowance)
-  const taxableAmount = Math.max(0, incomeForTax - taxData.personalAllowance);
+  const taxableAmount = Math.max(0, incomeForTax - effectivePersonalAllowance);
 
   // Calculate tax by band
-  const breakdown = calculateTaxByBand(taxableAmount, taxData);
+  const breakdown = calculateTaxByBand(taxableAmount, taxData, effectivePersonalAllowance);
 
   // Total tax paid
   const taxPaid = breakdown.basicRateTax + breakdown.higherRateTax + breakdown.additionalRateTax;
@@ -102,13 +103,44 @@ export function calculateIncomeTax(grossIncome, year, isPensionWithdrawal = fals
 }
 
 /**
+ * Calculate effective personal allowance after taper
+ * From 2010 onwards, personal allowance is reduced by £1 for every £2 of income over £100,000
+ *
+ * @param {number} income - Taxable income (after pension tax-free amount)
+ * @param {Object} taxData - Tax data for the year
+ * @returns {number} Effective personal allowance
+ */
+function calculateEffectivePersonalAllowance(income, taxData) {
+  const baseAllowance = taxData.personalAllowance;
+  const taperThreshold = taxData.personalAllowanceTaperThreshold;
+
+  // If no taper threshold defined (pre-2010), return full allowance
+  if (!taperThreshold) {
+    return baseAllowance;
+  }
+
+  // If income below threshold, return full allowance
+  if (income <= taperThreshold) {
+    return baseAllowance;
+  }
+
+  // Reduce allowance by £1 for every £2 over the threshold
+  const incomeOverThreshold = income - taperThreshold;
+  const allowanceReduction = Math.floor(incomeOverThreshold / 2);
+
+  // Allowance cannot go below zero
+  return Math.max(0, baseAllowance - allowanceReduction);
+}
+
+/**
  * Calculate tax breakdown by band
  *
  * @param {number} taxableAmount - Income after personal allowance
  * @param {Object} taxData - Tax data for the year
+ * @param {number} effectivePersonalAllowance - Personal allowance after taper
  * @returns {Object} Tax breakdown by band
  */
-function calculateTaxByBand(taxableAmount, taxData) {
+function calculateTaxByBand(taxableAmount, taxData, effectivePersonalAllowance) {
   let remainingIncome = taxableAmount;
 
   // Basic rate band
@@ -124,9 +156,8 @@ function calculateTaxByBand(taxableAmount, taxData) {
     if (taxData.additionalRate !== null && taxData.additionalRateThreshold !== null) {
       // Calculate the higher rate band width
       // Higher rate applies from end of basic rate to additional rate threshold
-      // The additional rate threshold is gross income, but we're working with taxable income
-      // So we need to work out how much of the higher rate band we can use
-      const higherRateBandWidth = taxData.additionalRateThreshold - taxData.personalAllowance - taxData.basicRateLimit;
+      // Use effective personal allowance (after taper) for the calculation
+      const higherRateBandWidth = taxData.additionalRateThreshold - effectivePersonalAllowance - taxData.basicRateLimit;
       higherRateAmount = Math.min(remainingIncome, higherRateBandWidth);
       remainingIncome = Math.max(0, remainingIncome - higherRateBandWidth);
     } else {
