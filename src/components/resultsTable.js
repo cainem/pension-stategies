@@ -83,36 +83,36 @@ function updateTableColumnHeaders(slot, strategyData) {
 
   if (type === STRATEGY_TYPES.GOLD) {
     thead.innerHTML = `
-      <th scope="col">Year</th>
-      <th scope="col">Gold Price</th>
-      <th scope="col">Holdings (oz)</th>
-      <th scope="col">Withdrawal</th>
-      <th scope="col">Fees</th>
-      <th scope="col">Net Received</th>
-      <th scope="col">Portfolio Value</th>
+      <th scope="col" title="Calendar year">Year</th>
+      <th scope="col" title="Gold price per troy ounce (Jan 1st)">Gold Price</th>
+      <th scope="col" title="Gold holdings in troy ounces">Holdings (oz)</th>
+      <th scope="col" title="Gross withdrawal amount">Withdrawal</th>
+      <th scope="col" title="Transaction fees (storage + sale costs)">Fees</th>
+      <th scope="col" title="Net amount received after fees">Net Received</th>
+      <th scope="col" title="Total value of remaining gold holdings">Portfolio Value</th>
     `;
   } else if (type === STRATEGY_TYPES.SIPP) {
     thead.innerHTML = `
-      <th scope="col">Year</th>
-      <th scope="col">Unit Price</th>
-      <th scope="col">Units Held</th>
-      <th scope="col">Withdrawal</th>
-      <th scope="col">Tax + Fees</th>
-      <th scope="col">Net Received</th>
-      <th scope="col">Portfolio Value</th>
+      <th scope="col" title="Calendar year">Year</th>
+      <th scope="col" title="ETF unit price in GBP">Unit Price</th>
+      <th scope="col" title="Number of ETF units held">Units Held</th>
+      <th scope="col" title="Gross withdrawal amount">Withdrawal</th>
+      <th scope="col" title="Income tax on withdrawal + management fees">Tax + Fees</th>
+      <th scope="col" title="Net amount received after tax and fees">Net Received</th>
+      <th scope="col" title="Total value of SIPP portfolio">Portfolio Value</th>
     `;
   } else if (type === STRATEGY_TYPES.COMBINED) {
     // Get sub-strategy names from combined result
     const nameA = result?.strategyA?.shortName || 'Strategy A';
     const nameB = result?.strategyB?.shortName || 'Strategy B';
     thead.innerHTML = `
-      <th scope="col">Year</th>
-      <th scope="col">${nameA} Value</th>
-      <th scope="col">${nameB} Value</th>
-      <th scope="col">Withdrawal</th>
-      <th scope="col">Fees + Tax</th>
-      <th scope="col">Net Received</th>
-      <th scope="col">Combined Value</th>
+      <th scope="col" title="Calendar year">Year</th>
+      <th scope="col" title="Value of ${nameA} portion (50% allocation)">${nameA}</th>
+      <th scope="col" title="Value of ${nameB} portion (50% allocation)">${nameB}</th>
+      <th scope="col" title="Total gross withdrawal from both strategies">Withdrawal</th>
+      <th scope="col" title="Combined fees and tax from both strategies">Fees + Tax</th>
+      <th scope="col" title="Total net amount received after all deductions">Net Received</th>
+      <th scope="col" title="Total combined portfolio value">Combined Value</th>
     `;
   }
 }

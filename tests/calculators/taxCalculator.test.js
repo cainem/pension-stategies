@@ -210,7 +210,7 @@ describe('calculateIncomeTax', () => {
     test('given_income200000In2012_when_calculating_then_applies50PercentAdditionalRate', () => {
       // 2012: Personal allowance £8,105, fully tapered at £200,000
       const result = calculateIncomeTax(200000, 2012);
-      
+
       expect(result.breakdown.personalAllowance).toBe(0);
       expect(result.breakdown.additionalRateAmount).toBe(50000);  // 200000 - 150000
       expect(result.breakdown.additionalRateTax).toBe(50000 * 0.50);  // 50% rate
@@ -219,7 +219,7 @@ describe('calculateIncomeTax', () => {
     test('given_income200000In2013_when_calculating_then_applies45PercentAdditionalRate', () => {
       // 2013: Personal allowance £9,440, fully tapered at £200,000
       const result = calculateIncomeTax(200000, 2013);
-      
+
       expect(result.breakdown.personalAllowance).toBe(0);
       expect(result.breakdown.additionalRateAmount).toBe(50000);  // 200000 - 150000
       expect(result.breakdown.additionalRateTax).toBe(50000 * 0.45);  // 45% rate
@@ -230,7 +230,7 @@ describe('calculateIncomeTax', () => {
     test('given_incomeExactly100000In2024_when_calculating_then_fullPersonalAllowance', () => {
       // At exactly £100,000, no taper applies yet
       const result = calculateIncomeTax(100000, 2024);
-      
+
       expect(result.breakdown.personalAllowance).toBe(12570);
       expect(result.taxPaid).toBe(27432); // No taper impact
     });
@@ -240,7 +240,7 @@ describe('calculateIncomeTax', () => {
       // Allowance reduced by £10,000 / 2 = £5,000
       // Effective allowance = £12,570 - £5,000 = £7,570
       const result = calculateIncomeTax(110000, 2024);
-      
+
       expect(result.breakdown.personalAllowance).toBe(7570);
       // Taxable: £110,000 - £7,570 = £102,430
       // Basic rate: £37,700 at 20% = £7,540
@@ -255,7 +255,7 @@ describe('calculateIncomeTax', () => {
       // Allowance reduced by £12,570 / 2 = £6,285
       // Effective allowance = £12,570 - £6,285 = £6,285
       const result = calculateIncomeTax(112570, 2024);
-      
+
       expect(result.breakdown.personalAllowance).toBe(6285);
     });
 
@@ -264,7 +264,7 @@ describe('calculateIncomeTax', () => {
       // Allowance reduced by £25,140 / 2 = £12,570
       // Effective allowance = £12,570 - £12,570 = £0
       const result = calculateIncomeTax(125140, 2024);
-      
+
       expect(result.breakdown.personalAllowance).toBe(0);
       // Taxable: £125,140 - £0 = £125,140
       // Basic rate: £37,700 at 20% = £7,540
@@ -280,14 +280,14 @@ describe('calculateIncomeTax', () => {
       // £130,000 is well over the taper removal point
       // Allowance should remain at £0 (can't go negative)
       const result = calculateIncomeTax(130000, 2024);
-      
+
       expect(result.breakdown.personalAllowance).toBe(0);
     });
 
     test('given_income150000In2024_when_calculating_then_noPersonalAllowanceAndAdditionalRate', () => {
       // Well above taper - should have £0 allowance and pay additional rate
       const result = calculateIncomeTax(150000, 2024);
-      
+
       expect(result.breakdown.personalAllowance).toBe(0);
       // Taxable: £150,000 - £0 = £150,000
       // Basic rate: £37,700 at 20% = £7,540
@@ -302,7 +302,7 @@ describe('calculateIncomeTax', () => {
     test('given_income110000In2009_when_calculating_then_noTaperApplied', () => {
       // Taper was introduced in 2010, so 2009 should use full allowance
       const result = calculateIncomeTax(110000, 2009);
-      
+
       // 2009 personal allowance was £6,475
       expect(result.breakdown.personalAllowance).toBe(6475);
     });
@@ -313,7 +313,7 @@ describe('calculateIncomeTax', () => {
       // Allowance reduced by £10,000 / 2 = £5,000
       // Effective allowance = £6,475 - £5,000 = £1,475
       const result = calculateIncomeTax(110000, 2010);
-      
+
       expect(result.breakdown.personalAllowance).toBe(1475);
     });
 
@@ -325,7 +325,7 @@ describe('calculateIncomeTax', () => {
       // Allowance reduced by £12,500 / 2 = £6,250
       // Effective allowance = £12,570 - £6,250 = £6,320
       const result = calculateIncomeTax(150000, 2024, true);
-      
+
       expect(result.taxFreeAmount).toBe(37500);
       expect(result.breakdown.personalAllowance).toBe(6320);
     });

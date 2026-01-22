@@ -503,6 +503,7 @@ h3 { font-size: var(--font-size-xl); }
   text-align: right;
   position: sticky;
   top: 0;
+  cursor: help;
 }
 
 .results-table th:first-child,
@@ -809,6 +810,7 @@ h3 { font-size: var(--font-size-xl); }
 
 .metric dt {
   color: var(--color-text-muted);
+  cursor: help;
 }
 
 .metric dd {
@@ -857,6 +859,11 @@ h3 { font-size: var(--font-size-xl); }
   background: var(--color-text);
   color: white;
   font-weight: 600;
+  cursor: help;
+}
+
+.comparison-table td:first-child {
+  cursor: help;
 }
 
 .comparison-table td:last-child {
