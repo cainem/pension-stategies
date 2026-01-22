@@ -77,8 +77,22 @@
           <li><strong>S&amp;P 500 SIPP</strong> – Keep pension invested in US stocks</li>
           <li><strong>Nasdaq 100 SIPP</strong> – Keep pension invested in US tech stocks</li>
           <li><strong>FTSE 100 SIPP</strong> – Keep pension invested in UK stocks</li>
+          <li><strong>US Long Treasury SIPP</strong> – Keep pension invested in long-term US bonds (annuity proxy)</li>
           <li><strong>Combined strategies</strong> – 50/50 splits of any two base strategies</li>
         </ul>
+        <div class="about-section">
+          <h3>Inflation & Purchasing Power</h3>
+          <p>
+            By default, this tool adjusts annual withdrawals for <strong>UK inflation (CPI)</strong>. 
+            This means if you specify a 4% withdrawal rate, the actual pound amount you receive 
+            will increase each year to match rising prices, ensuring your lifestyle remains 
+            consistent throughout your retirement.
+          </p>
+          <p>
+            This is critical for long-term simulations (20-30 years), as £10,000 in 1990 would 
+            need to be roughly £25,000 in 2024 to buy the same amount of goods and services.
+          </p>
+        </div>
         <p>
           All calculations include realistic costs: transaction fees, storage fees, management fees, 
           and accurate historical UK tax rates.
@@ -125,10 +139,13 @@
           <strong>Data Sources:</strong>
         </p>
         <ul>
-          <li>Gold prices: LBMA Gold Price (London Bullion Market Association)</li>
-          <li>S&amp;P 500: S&amp;P Dow Jones Indices Total Return</li>
-          <li>Exchange rates: Bank of England historical data</li>
-          <li>UK tax rates: HMRC historical tax tables</li>
+          <li><strong>Gold prices:</strong> LBMA Gold Price (London Bullion Market Association)</li>
+          <li><strong>S&amp;P 500 / Nasdaq 100:</strong> S&amp;P Dow Jones and Nasdaq Total Return Indices</li>
+          <li><strong>FTSE 100:</strong> FTSE Russell Total Return</li>
+          <li><strong>US Treasuries:</strong> Bloomberg/ICE US Treasury 20+ Year Total Return</li>
+          <li><strong>UK Inflation:</strong> ONS Consumer Price Index (CPI) historical data</li>
+          <li><strong>Exchange rates:</strong> Bank of England and FRED historical data</li>
+          <li><strong>UK tax rates:</strong> HMRC historical tax bands and rates</li>
         </ul>
       </section>
 

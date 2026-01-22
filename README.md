@@ -6,25 +6,27 @@ A client-side web application that helps you understand the trade-offs between d
 
 ## Strategies Available
 
-### Base Strategies (5)
+### Base Strategies (6)
 1. **Physical Gold - Outside Pension**: Withdraw pension, pay tax, buy CGT-exempt physical gold
 2. **Gold ETF SIPP**: Keep pension in gold ETF within SIPP wrapper
 3. **S&P 500 SIPP**: Keep pension in S&P 500 tracker ETF within SIPP
 4. **Nasdaq 100 SIPP**: Keep pension in Nasdaq 100 tracker ETF within SIPP
 5. **FTSE 100 SIPP**: Keep pension in FTSE 100 tracker ETF within SIPP
+6. **US Long Treasury SIPP**: Keep pension in US 20+ year Treasury bond ETF within SIPP
 
-### Combined Strategies (10)
-- 50/50 splits between any two base strategies
+### Combined Strategies (15)
+- 50/50 splits between various base strategies (e.g., Gold + S&P 500, S&P 500 + US Treasuries, etc.)
 
 ## Features
 
 - Compare any two strategies side-by-side
 - Year-by-year comparison with detailed breakdowns
 - Accurate UK tax calculations (1980-2026)
+- Inflation-adjusted withdrawals (maintain purchasing power)
 - Configurable parameters:
   - Starting pension amount
   - Annual withdrawal rate (1-10%)
-  - Start year (1980-2001)
+  - Start year (1980-2021 for full 25-yr comparison)
   - Comparison period (5-30 years)
   - Transaction costs and fees
 - Interactive charts showing portfolio value over time
@@ -96,6 +98,8 @@ src/
 │   ├── sp500TotalReturn.js   # S&P 500 Total Return Index
 │   ├── nasdaq100TotalReturn.js # Nasdaq 100 Total Return Index
 │   ├── ftse100TotalReturn.js # FTSE 100 Total Return Index
+│   ├── usLongTreasuryTotalReturn.js # US Treasury 20+ Year TR Index
+│   ├── ukCpi.js              # UK Consumer Price Index data
 │   ├── exchangeRates.js      # GBP/USD exchange rates
 │   └── ukTaxData.js          # UK tax rates and bands
 └── utils/

@@ -13,19 +13,16 @@ This document defines a client-side web application that enables users to compar
 
 ### 1.1 Available Strategies
 
-**4 Base Strategies:**
+**6 Base Strategies:**
 1. **Physical Gold**: Withdraw pension, pay tax, purchase CGT-exempt gold coins
-2. **S&P 500 SIPP**: Keep pension invested in an S&P 500 tracker within a SIPP
-3. **Nasdaq 100 SIPP**: Keep pension invested in a Nasdaq 100 tracker within a SIPP
-4. **FTSE 100 SIPP**: Keep pension invested in a FTSE 100 tracker within a SIPP
+2. **Gold ETF SIPP**: Keep pension invested in a Gold ETF tracker within a SIPP
+3. **S&P 500 SIPP**: Keep pension invested in an S&P 500 tracker within a SIPP
+4. **Nasdaq 100 SIPP**: Keep pension invested in a Nasdaq 100 tracker within a SIPP
+5. **FTSE 100 SIPP**: Keep pension invested in a FTSE 100 tracker within a SIPP
+6. **US Long Treasury SIPP**: Keep pension invested in US 20+ year Treasury bond ETF within a SIPP
 
-**6 Combination Strategies (50/50 splits):**
-1. 50% Gold + 50% S&P 500
-2. 50% Gold + 50% Nasdaq 100
-3. 50% Gold + 50% FTSE 100
-4. 50% S&P 500 + 50% Nasdaq 100
-5. 50% S&P 500 + 50% FTSE 100
-6. 50% Nasdaq 100 + 50% FTSE 100
+**15 Combination Strategies (50/50 splits):**
+Includes various pairings of the above base strategies (e.g., Gold + S&P 500, S&P 500 + US Treasuries, etc.)
 
 Users select **any 2 strategies** to compare side-by-side.
 
@@ -64,23 +61,25 @@ This tool provides a year-by-year comparison to illustrate the trade-offs betwee
 | Input | Type | Default | Range/Constraints |
 |-------|------|---------|-------------------|
 | Starting Pension Amount | Currency (GBP) | £500,000 | £10,000 - £10,000,000 |
-| Starting Year | Year selector | 2000 | 1980 - 2026* |
-| Annual Withdrawal Rate | Percentage | 4% | 1% - 10% |
+| Starting Year | Year selector | 2001 | 1980 - 2026* |
+| Annual Withdrawal Rate | Percentage | 5% | 1% - 10% |
 | Comparison Period | Years | 25 | 5 - 30 |
-| Strategy 1 | Dropdown | Physical Gold | Any of 10 strategies |
-| Strategy 2 | Dropdown | S&P 500 SIPP | Any of 10 strategies |
+| Strategy 1 | Dropdown | Physical Gold | Any of 21 strategies |
+| Strategy 2 | Dropdown | S&P 500 SIPP | Any of 21 strategies |
 
 *Note: Some indices have limited historical data:
 - Nasdaq 100: Available from 1985 onwards
 - FTSE 100: Available from 1984 onwards
+- US Treasury: Available from 1980 onwards
 
 ### 4.2 Advanced Settings (Collapsible)
 
 | Setting | Default | Range |
 |---------|---------|-------|
-| Gold Transaction Fee | 2% | 0% - 10% |
-| Gold Storage Fee | 0.7% | 0% - 5% |
+| Gold Transaction Fee | 3% | 0% - 10% |
+| Gold Storage Fee | 0% | 0% - 5% |
 | SIPP Management Fee | 0.5% | 0% - 3% |
+| Maintain Purchasing Power | Enabled | Boolean |
 
 ### 4.3 Gold Strategy Calculations
 
@@ -94,9 +93,9 @@ This tool provides a year-by-year comparison to illustrate the trade-offs betwee
 4. Calculate gold quantity purchased at Jan 1st spot price
 
 #### Annual Operations (Years 1-N)
-1. **Storage fee**: Deduct annual storage fee (default 0.7%) by selling gold
-2. **Withdrawal**: Calculate 4% of **original gross pension** (not current balance)
-3. Apply transaction fee (default 2%) on gold sale
+1. **Storage fee**: Deduct annual storage fee (default 0%) by selling gold
+2. **Withdrawal**: Calculate target withdrawal. By default, this is adjusted for UK CPI inflation annually to maintain purchasing power.
+3. Apply transaction fee (default 3%) on gold sale
 4. No income tax on gold sales (physical gold coins are CGT-exempt)
 5. Reduce gold holdings by equivalent weight at Jan 1st spot price
 6. Track remaining gold quantity and GBP value
@@ -109,7 +108,7 @@ This tool provides a year-by-year comparison to illustrate the trade-offs betwee
 
 #### Annual Operations (Years 1-N)
 1. **Management fee**: Apply fee (default 0.5%) on total balance
-2. **Withdrawal**: Calculate 4% of **original gross pension**
+2. **Withdrawal**: Calculate target withdrawal. By default, this is adjusted for UK CPI inflation annually to maintain purchasing power.
 3. Apply income tax at applicable rates:
    - 25% tax-free portion (PCLS)
    - Remaining 75% taxed as income
@@ -221,6 +220,8 @@ All historical data will be hardcoded in JavaScript files:
 | S&P 500 Total Return Index | S&P Dow Jones Indices | 1980-2026 | Jan 1st annually |
 | Nasdaq 100 Total Return Index | Nasdaq | 1985-2026 | Jan 1st annually |
 | FTSE 100 Total Return Index | FTSE Russell | 1984-2026 | Jan 1st annually |
+| US Long Treasury TR Index | Bloomberg / ICE | 1980-2026 | Jan 1st annually |
+| UK CPI Inflation | ONS | 1980-2026 | Annual |
 | GBP/USD Exchange Rate | Bank of England | 1980-2026 | Jan 1st annually |
 | UK Tax Bands | HMRC historical data | 1980-2026 | Annual |
 
@@ -245,6 +246,8 @@ All historical data will be hardcoded in JavaScript files:
 | S&P 500 TR Index | S&P Global / Yahoo Finance historical |
 | Nasdaq 100 TR Index | Nasdaq.com / Yahoo Finance (^NDX) |
 | FTSE 100 TR Index | FTSE Russell / Yahoo Finance (^FTTR) |
+| US Treasuries | Bloomberg/ICE US Treasury 20+ Year TR |
+| UK Inflation | ONS Consumer Price Index (CPI) |
 | GBP/USD Rates | Bank of England historical data |
 | UK Tax History | HMRC / legislation.gov.uk |
 
@@ -276,7 +279,7 @@ This tool is for **illustrative purposes only** and does not constitute financia
 
 3. **Single Annual Transaction**: All withdrawals occur on January 1st of each year at that day's price.
 
-4. **No Inflation Adjustment**: All figures are nominal (not inflation-adjusted).
+4. **Inflation Adjustment**: The model can adjust withdrawals for inflation using UK CPI data to maintain purchasing power.
 
 5. **Only Income Source**: The pension withdrawal is assumed to be the user's only income (personal allowance fully available).
 
@@ -290,7 +293,6 @@ This tool is for **illustrative purposes only** and does not constitute financia
 
 ## 9. Out of Scope (Version 2.0)
 
-- Inflation adjustment
 - Annuity strategy (different mechanics - not drawdown-based)
 - Custom split ratios (e.g., 60/40)
 - More than 2 strategies compared simultaneously
@@ -305,7 +307,7 @@ This tool is for **illustrative purposes only** and does not constitute financia
 
 ## 10. Success Criteria
 
-1. Users can select any 2 of 10 strategies to compare
+1. Users can select any 2 of 21 strategies to compare
 2. Advanced settings allow fee configuration
 3. Year-by-year calculations display correctly for all strategies
 4. Tax calculations are accurate for all years 1980-2026
