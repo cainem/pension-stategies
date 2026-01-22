@@ -35,7 +35,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Planned
-- Google Analytics integration
-- AdSense placeholder areas
-- Additional index options
+## [1.1.0] - 2026-01-22
+
+### Added
+- **Inflation-Adjusted Withdrawals**: Strategies now maintain constant purchasing power using historical UK CPI data (1980-2026).
+- **New Base Strategies**: 
+  - **US Long Treasury SIPP**: long-term US bond tracker (annuity proxy).
+  - **Gold ETF SIPP**: Gold tracker within the SIPP wrapper.
+- **21 Total Strategies**: Increased from 15 with new asset classes and permutations.
+- **Analytics & Cookies**: Google Analytics (GA4) integration with event tracking and a GDPR-compliant cookie notice.
+- **Tooltips**: Data tables now include hover descriptions for better metric clarity.
+
+### Changed
+- **Premium UI Redesign**: Migrated to a "Premium Light Editorial" aesthetic using Lora (Serif) and Inter (Sans) typography.
+- **Data Integrity**: Fixed a significant discrepancy in the S&P 500 Total Return index data around the year 2000.
+- **Enhanced Charts**: Improved chart color differentiation and readability.
+- **Documentation**: Updated PDD, README, and About page to reflect new financial modeling capabilities.
+
+### Technical
+- 100% test coverage maintained across all calculators (now 682 tests).
+- Optimized CSS variable system for theme consistency.
