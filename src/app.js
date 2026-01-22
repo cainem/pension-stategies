@@ -90,7 +90,8 @@ async function handleCalculation(inputs, shouldScroll = true) {
       'disclaimers-content',
       inputs.strategy1 || 'gold',
       inputs.strategy2 || 'sp500',
-      inputs.startYear
+      inputs.startYear,
+      config
     );
     showDisclaimersSection();
 

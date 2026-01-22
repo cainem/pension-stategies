@@ -157,7 +157,7 @@ describe('calculateGoldStrategy', () => {
     });
 
     test('given_depletedFunds_when_withdrawing_then_sellsAllRemaining', () => {
-      const result = calculateGoldStrategy(50000, 2000, 10, 20);
+      const result = calculateGoldStrategy(50000, 2000, 10, 20, { adjustForInflation: false });
 
       const depletedYear = result.yearlyResults.find(r => r.status === 'depleted');
       if (depletedYear) {

@@ -73,6 +73,18 @@ describe('getApplicableDisclaimers', () => {
     expect(ids).toContain('general');
   });
 
+  test('given_anyStrategies_when_gettingDisclaimers_then_alwaysIncludesInflationAdjustment', () => {
+    const disclaimers = getApplicableDisclaimers('gold', 'sp500', 2020);
+    const ids = disclaimers.map(d => d.id);
+    expect(ids).toContain('inflationAdjustment');
+  });
+
+  test('given_inflationDisabled_when_gettingDisclaimers_then_inflationDisclaimerHasCorrectContent', () => {
+    const disclaimers = getApplicableDisclaimers('gold', 'sp500', 2020, { adjustForInflation: false });
+    const inflationDisclaimer = disclaimers.find(d => d.id === 'inflationAdjustment');
+    expect(inflationDisclaimer.content).toContain('fixed nominal withdrawals');
+  });
+
   test('given_anyStrategies_when_gettingDisclaimers_then_alwaysIncludesTaxRates', () => {
     const disclaimers = getApplicableDisclaimers('sp500', 'ftse100', 2020);
     const ids = disclaimers.map(d => d.id);

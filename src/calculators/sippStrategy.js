@@ -19,9 +19,10 @@
  */
 
 import { getSyntheticPrice, INDEX_TYPES, INDEX_CONFIG } from './syntheticEtf.js';
+import { getInflationMultiplier } from '../data/ukCpi.js';
 import { calculateIncomeTax } from './taxCalculator.js';
 import { isValidYear, isValidAmount } from '../utils/validators.js';
-import { COSTS } from '../config/defaults.js';
+import { COSTS, YEAR_RANGE } from '../config/defaults.js';
 
 /**
  * Yearly result for SIPP strategy
@@ -79,7 +80,8 @@ import { COSTS } from '../config/defaults.js';
 export function calculateSippStrategy(pensionAmount, startYear, withdrawalRate, years, indexType = INDEX_TYPES.SP500, config = {}) {
   // Merge config with defaults
   const costs = {
-    sippManagementFeePercent: config.sippManagementFeePercent ?? COSTS.sippManagementFeePercent
+    sippManagementFeePercent: config.sippManagementFeePercent ?? COSTS.sippManagementFeePercent,
+    adjustForInflation: config.adjustForInflation ?? COSTS.adjustForInflation
   };
   // Validate inputs
   validateInputs(pensionAmount, startYear, withdrawalRate, years, indexType);
@@ -131,7 +133,7 @@ function validateInputs(pensionAmount, startYear, withdrawalRate, years, indexTy
   }
 
   if (!isValidYear(startYear)) {
-    throw new Error(`Start year ${startYear} is outside supported range (1980-2026)`);
+    throw new Error(`Start year ${startYear} is outside supported range (${YEAR_RANGE.min}-${YEAR_RANGE.max})`);
   }
 
   // Validate index type
@@ -197,6 +199,10 @@ function calculateYearlyWithdrawals(startingUnits, startYear, annualWithdrawalGr
     // Determine status and withdrawal
     let status = 'active';
     let grossWithdrawal = annualWithdrawalGross;
+    if (costs.adjustForInflation) {
+      grossWithdrawal = annualWithdrawalGross * getInflationMultiplier(startYear, year);
+    }
+
     let unitsSold = 0;
     let taxOnWithdrawal = 0;
     let netWithdrawal = 0;
@@ -314,7 +320,8 @@ export function calculateSippYearsRemaining(units, startYear, annualWithdrawalGr
 
   // Merge config with defaults
   const costs = {
-    sippManagementFeePercent: config.sippManagementFeePercent ?? COSTS.sippManagementFeePercent
+    sippManagementFeePercent: config.sippManagementFeePercent ?? COSTS.sippManagementFeePercent,
+    adjustForInflation: config.adjustForInflation ?? COSTS.adjustForInflation
   };
 
   let currentUnits = units;
@@ -336,8 +343,14 @@ export function calculateSippYearsRemaining(units, startYear, annualWithdrawalGr
 
     if (currentUnits <= 0) break;
 
+    // Determine withdrawal amount for this year (adjusted for inflation if enabled)
+    let grossWithdrawal = annualWithdrawalGross;
+    if (costs.adjustForInflation) {
+      grossWithdrawal = annualWithdrawalGross * getInflationMultiplier(startYear, year);
+    }
+
     // Calculate units needed for withdrawal
-    const unitsNeeded = annualWithdrawalGross / etfPrice;
+    const unitsNeeded = grossWithdrawal / etfPrice;
 
     if (unitsNeeded >= currentUnits) {
       // Partial year - calculate fraction

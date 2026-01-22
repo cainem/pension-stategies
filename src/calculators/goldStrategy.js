@@ -15,9 +15,10 @@
  */
 
 import { getGoldPrice } from '../data/goldPrices.js';
+import { getInflationMultiplier } from '../data/ukCpi.js';
 import { calculateIncomeTax } from './taxCalculator.js';
 import { isValidYear, isValidAmount } from '../utils/validators.js';
-import { COSTS } from '../config/defaults.js';
+import { COSTS, YEAR_RANGE } from '../config/defaults.js';
 
 /**
  * Yearly result for gold strategy
@@ -70,7 +71,8 @@ export function calculateGoldStrategy(pensionAmount, startYear, withdrawalRate, 
   // Merge config with defaults
   const costs = {
     goldTransactionPercent: config.goldTransactionPercent ?? COSTS.goldTransactionPercent,
-    goldStorageFeePercent: config.goldStorageFeePercent ?? COSTS.goldStorageFeePercent
+    goldStorageFeePercent: config.goldStorageFeePercent ?? COSTS.goldStorageFeePercent,
+    adjustForInflation: config.adjustForInflation ?? COSTS.adjustForInflation
   };
 
   // Validate inputs
@@ -125,7 +127,7 @@ function validateInputs(pensionAmount, startYear, withdrawalRate, years) {
   }
 
   if (!isValidYear(startYear)) {
-    throw new Error(`Start year ${startYear} is outside supported range (2000-2026)`);
+    throw new Error(`Start year ${startYear} is outside supported range (${YEAR_RANGE.min}-${YEAR_RANGE.max})`);
   }
 
   if (typeof withdrawalRate !== 'number' || withdrawalRate <= 0 || withdrawalRate > 100) {
@@ -197,7 +199,13 @@ function calculateYearlyWithdrawals(startingGoldOunces, startYear, annualWithdra
     let storageFee = 0;
     let goldSoldForStorage = 0;
     let valueAfterStorageFee = startValue;
+
+    // Adjust withdrawal for inflation if enabled
     let withdrawalGross = annualWithdrawal;
+    if (costs.adjustForInflation) {
+      withdrawalGross = annualWithdrawal * getInflationMultiplier(startYear, year);
+    }
+
     let goldSold = 0;
     let transactionCost = 0;
     let netWithdrawal = 0;
@@ -237,7 +245,7 @@ function calculateYearlyWithdrawals(startingGoldOunces, startYear, annualWithdra
         // Step 2: Make annual withdrawal
         // Calculate how much gold to sell for withdrawal
         const effectivePrice = goldPrice * (1 - transactionCostRate);
-        const ouncesNeeded = annualWithdrawal / effectivePrice;
+        const ouncesNeeded = withdrawalGross / effectivePrice;
 
         if (ouncesNeeded >= currentGoldOunces) {
           // Not enough gold - sell everything
@@ -344,7 +352,8 @@ export function calculateGoldYearsRemaining(goldOunces, startYear, annualWithdra
 
   const costs = {
     goldTransactionPercent: config.goldTransactionPercent ?? COSTS.goldTransactionPercent,
-    goldStorageFeePercent: config.goldStorageFeePercent ?? COSTS.goldStorageFeePercent
+    goldStorageFeePercent: config.goldStorageFeePercent ?? COSTS.goldStorageFeePercent,
+    adjustForInflation: config.adjustForInflation ?? COSTS.adjustForInflation
   };
 
   let currentOunces = goldOunces;
@@ -374,8 +383,14 @@ export function calculateGoldYearsRemaining(goldOunces, startYear, annualWithdra
 
     currentOunces -= ouncesForStorage;
 
+    // Determine withdrawal amount for this year (adjusted for inflation if enabled)
+    let withdrawalGross = annualWithdrawal;
+    if (costs.adjustForInflation) {
+      withdrawalGross = annualWithdrawal * getInflationMultiplier(startYear, year);
+    }
+
     // Then deduct withdrawal
-    const ouncesNeeded = annualWithdrawal / effectivePrice;
+    const ouncesNeeded = withdrawalGross / effectivePrice;
 
     if (ouncesNeeded >= currentOunces) {
       // Partial year - calculate fraction

@@ -131,27 +131,49 @@ export const DISCLAIMERS = {
     icon: '⚖️',
     priority: 9,
     appliesTo: ['goldEtf', 'gold-goldEtf', 'goldEtf-sp500', 'goldEtf-nasdaq100', 'goldEtf-ftse100']
+  },
+
+  inflationAdjustment: {
+    id: 'inflationAdjustment',
+    title: 'Inflation Adjustment',
+    content: `This model adjusts your annual withdrawals each year to match historical UK CPI inflation. 
+      This ensures that your "Net Received" amount maintains the same purchasing power as the initial 
+      withdrawal amount. You can disable this in Advanced Settings to see the effect of fixed nominal 
+      withdrawals.`,
+    icon: '🎈',
+    priority: 10
   }
 };
 
 /**
  * Get disclaimers relevant to the selected strategies and time period
- *
  * @param {string} strategy1Id - First strategy ID
  * @param {string} strategy2Id - Second strategy ID
  * @param {number} startYear - Start year of comparison
+ * @param {Object} [config={}] - Optional configuration
  * @returns {Object[]} Array of applicable disclaimer objects, sorted by priority
  */
-export function getApplicableDisclaimers(strategy1Id, strategy2Id, startYear) {
+export function getApplicableDisclaimers(strategy1Id, strategy2Id, startYear, config = {}) {
   const strategies = [strategy1Id, strategy2Id];
   const applicableDisclaimers = [];
+  const isInflationAdjusted = config.adjustForInflation !== false;
 
   // General disclaimer always applies
   applicableDisclaimers.push(DISCLAIMERS.general);
 
+  // Inflation adjustment disclaimer
+  const inflationDisclaimer = { ...DISCLAIMERS.inflationAdjustment };
+  if (!isInflationAdjusted) {
+    inflationDisclaimer.content = `This model is using <b>fixed nominal withdrawals</b>. 
+      The annual amount is NOT adjusted for inflation, meaning its purchasing power 
+      will decline over time as prices rise. You can enable inflation adjustment in 
+      Advanced Settings to maintain purchasing power.`;
+  }
+  applicableDisclaimers.push(inflationDisclaimer);
+
   // Check each disclaimer
   Object.values(DISCLAIMERS).forEach(disclaimer => {
-    if (disclaimer.id === 'general') return; // Already added
+    if (disclaimer.id === 'general' || disclaimer.id === 'inflationAdjustment') return; // Already added
 
     let applies = false;
 
@@ -186,18 +208,19 @@ export function getApplicableDisclaimers(strategy1Id, strategy2Id, startYear) {
  * @param {string} strategy1Id - First strategy ID
  * @param {string} strategy2Id - Second strategy ID
  * @param {number} startYear - Start year of comparison
+ * @param {Object} [config={}] - Optional configuration
  */
-export function renderDisclaimers(containerId, strategy1Id, strategy2Id, startYear) {
+export function renderDisclaimers(containerId, strategy1Id, strategy2Id, startYear, config = {}) {
   const container = document.getElementById(containerId);
   if (!container) return;
 
-  const disclaimers = getApplicableDisclaimers(strategy1Id, strategy2Id, startYear);
+  const applicableDisclaimers = getApplicableDisclaimers(strategy1Id, strategy2Id, startYear, config);
 
   const html = `
     <div class="disclaimers">
       <h3 class="disclaimers__title">Important Information</h3>
       <div class="disclaimers__list">
-        ${disclaimers.map(d => `
+        ${applicableDisclaimers.map(d => `
           <details class="disclaimer" ${d.id === 'general' ? 'open' : ''}>
             <summary class="disclaimer__summary">
               <span class="disclaimer__icon">${d.icon}</span>

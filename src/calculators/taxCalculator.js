@@ -36,7 +36,7 @@ import { YEAR_RANGE } from '../config/defaults.js';
  * @param {number} year - Tax year (e.g., 2000 for tax year 2000/01)
  * @param {boolean} [isPensionWithdrawal=false] - Whether this is a pension withdrawal (25% tax-free PCLS)
  * @returns {TaxCalculationResult} Breakdown of tax calculation
- * @throws {Error} If year is outside supported range (2000-2026)
+ * @throws {Error} If year is outside supported range (${YEAR_RANGE.min}-${YEAR_RANGE.max})
  * @throws {Error} If grossIncome is negative
  *
  * @example

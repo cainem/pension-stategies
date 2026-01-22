@@ -18,6 +18,7 @@ let settingsState = {
   goldTransactionPercent: COSTS.goldTransactionPercent,
   goldStorageFeePercent: COSTS.goldStorageFeePercent,
   sippManagementFeePercent: COSTS.sippManagementFeePercent,
+  adjustForInflation: COSTS.adjustForInflation,
   useCustomSettings: false
 };
 
@@ -125,6 +126,27 @@ function renderAdvancedSettings(container) {
               <span class="form-default">Default: ${COSTS.sippManagementFeePercent}%</span>
             </div>
           </fieldset>
+
+          <!-- Strategy Options -->
+          <fieldset class="advanced-settings__group">
+            <legend>Inflation Adjustment</legend>
+
+            <div class="form-group form-group--checkbox">
+              <label for="adjust-for-inflation" class="checkbox-label">
+                <input
+                  type="checkbox"
+                  id="adjust-for-inflation"
+                  name="adjustForInflation"
+                  ${COSTS.adjustForInflation ? 'checked' : ''}
+                />
+                Maintain Purchasing Power
+              </label>
+              <span class="form-hint">
+                Increase annual withdrawals by UK CPI inflation each year.
+              </span>
+              <span class="form-default">Default: ${COSTS.adjustForInflation ? 'On' : 'Off'}</span>
+            </div>
+          </fieldset>
         </div>
 
         <div class="advanced-settings__actions">
@@ -145,8 +167,8 @@ function renderAdvancedSettings(container) {
  */
 function setupEventHandlers(onChange) {
   // Input change handlers
-  const inputs = document.querySelectorAll('.advanced-settings input[type="number"]');
-  inputs.forEach(input => {
+  const numericInputs = document.querySelectorAll('.advanced-settings input[type="number"]');
+  numericInputs.forEach(input => {
     input.addEventListener('change', () => {
       updateSettingsState();
       showModifiedStatus();
@@ -156,6 +178,16 @@ function setupEventHandlers(onChange) {
     input.addEventListener('input', () => {
       updateSettingsState();
       showModifiedStatus();
+    });
+  });
+
+  // Checkbox change handlers
+  const checkboxInputs = document.querySelectorAll('.advanced-settings input[type="checkbox"]');
+  checkboxInputs.forEach(input => {
+    input.addEventListener('change', () => {
+      updateSettingsState();
+      showModifiedStatus();
+      if (onChange) onChange(getSettings());
     });
   });
 
@@ -176,16 +208,19 @@ function updateSettingsState() {
   const goldTransactionInput = document.getElementById('gold-transaction-fee');
   const goldStorageInput = document.getElementById('gold-storage-fee');
   const sippManagementInput = document.getElementById('sipp-management-fee');
+  const adjustInflationInput = document.getElementById('adjust-for-inflation');
 
   settingsState.goldTransactionPercent = parseFloat(goldTransactionInput?.value) || COSTS.goldTransactionPercent;
   settingsState.goldStorageFeePercent = parseFloat(goldStorageInput?.value) || COSTS.goldStorageFeePercent;
   settingsState.sippManagementFeePercent = parseFloat(sippManagementInput?.value) || COSTS.sippManagementFeePercent;
+  settingsState.adjustForInflation = adjustInflationInput ? adjustInflationInput.checked : COSTS.adjustForInflation;
 
   // Check if any settings differ from defaults
   settingsState.useCustomSettings = (
     settingsState.goldTransactionPercent !== COSTS.goldTransactionPercent ||
     settingsState.goldStorageFeePercent !== COSTS.goldStorageFeePercent ||
-    settingsState.sippManagementFeePercent !== COSTS.sippManagementFeePercent
+    settingsState.sippManagementFeePercent !== COSTS.sippManagementFeePercent ||
+    settingsState.adjustForInflation !== COSTS.adjustForInflation
   );
 }
 
@@ -212,15 +247,18 @@ export function resetToDefaults() {
   const goldTransactionInput = document.getElementById('gold-transaction-fee');
   const goldStorageInput = document.getElementById('gold-storage-fee');
   const sippManagementInput = document.getElementById('sipp-management-fee');
+  const adjustInflationInput = document.getElementById('adjust-for-inflation');
 
   if (goldTransactionInput) goldTransactionInput.value = COSTS.goldTransactionPercent;
   if (goldStorageInput) goldStorageInput.value = COSTS.goldStorageFeePercent;
   if (sippManagementInput) sippManagementInput.value = COSTS.sippManagementFeePercent;
+  if (adjustInflationInput) adjustInflationInput.checked = COSTS.adjustForInflation;
 
   settingsState = {
     goldTransactionPercent: COSTS.goldTransactionPercent,
     goldStorageFeePercent: COSTS.goldStorageFeePercent,
     sippManagementFeePercent: COSTS.sippManagementFeePercent,
+    adjustForInflation: COSTS.adjustForInflation,
     useCustomSettings: false
   };
 
@@ -236,7 +274,8 @@ export function getSettings() {
   return {
     goldTransactionPercent: settingsState.goldTransactionPercent,
     goldStorageFeePercent: settingsState.goldStorageFeePercent,
-    sippManagementFeePercent: settingsState.sippManagementFeePercent
+    sippManagementFeePercent: settingsState.sippManagementFeePercent,
+    adjustForInflation: settingsState.adjustForInflation
   };
 }
 
@@ -247,14 +286,13 @@ export function getSettings() {
  * @returns {Object} Config object for calculators
  */
 export function getConfig() {
-  if (!settingsState.useCustomSettings) {
-    return {};
-  }
-
+  // Always return the inflation setting, even if it's default,
+  // because we want the toggle to work immediately.
   return {
     goldTransactionPercent: settingsState.goldTransactionPercent,
     goldStorageFeePercent: settingsState.goldStorageFeePercent,
-    sippManagementFeePercent: settingsState.sippManagementFeePercent
+    sippManagementFeePercent: settingsState.sippManagementFeePercent,
+    adjustForInflation: settingsState.adjustForInflation
   };
 }
 
