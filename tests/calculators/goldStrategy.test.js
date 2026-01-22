@@ -268,8 +268,10 @@ describe('calculateGoldStrategy', () => {
   });
 
   describe('storage fees', () => {
-    test('given_goldHoldings_when_yearly_then_chargesStorageFee', () => {
-      const result = calculateGoldStrategy(500000, 2010, 4, 5);
+    test('given_goldHoldings_when_storageConfigured_then_chargesStorageFee', () => {
+      const result = calculateGoldStrategy(500000, 2010, 4, 5, {
+        goldStorageFeePercent: 0.7 // Explicit storage fee for testing
+      });
 
       // Each year should have a storage fee
       result.yearlyResults.forEach(year => {
@@ -279,17 +281,22 @@ describe('calculateGoldStrategy', () => {
       });
     });
 
-    test('given_storageFee_when_charged_then_is0Point7PercentOfValue', () => {
-      const result = calculateGoldStrategy(500000, 2010, 4, 5);
+    test('given_storageFee_when_charged_then_matchesConfiguredPercent', () => {
+      const storageFeePercent = 0.7;
+      const result = calculateGoldStrategy(500000, 2010, 4, 5, {
+        goldStorageFeePercent: storageFeePercent
+      });
       const firstYear = result.yearlyResults[0];
 
-      // Storage fee should be 0.7% of start value
-      const expectedStorageFee = firstYear.startValueGbp * (COSTS.goldStorageFeePercent / 100);
+      // Storage fee should match configured percentage of start value
+      const expectedStorageFee = firstYear.startValueGbp * (storageFeePercent / 100);
       expect(firstYear.storageFee).toBeCloseTo(expectedStorageFee, 2);
     });
 
     test('given_storageFee_when_paying_then_sellsGoldToCover', () => {
-      const result = calculateGoldStrategy(500000, 2010, 4, 5);
+      const result = calculateGoldStrategy(500000, 2010, 4, 5, {
+        goldStorageFeePercent: 0.7 // Explicit storage fee for testing
+      });
       const firstYear = result.yearlyResults[0];
 
       // Should have sold gold specifically for storage
@@ -403,14 +410,15 @@ describe('configurable fees', () => {
   });
 
   test('given_customStorageFee_when_calculating_then_usesCustomFee', () => {
-    const defaultResult = calculateGoldStrategy(100000, 2020, 4, 5);
+    const zeroStorageResult = calculateGoldStrategy(100000, 2020, 4, 5);
     const customResult = calculateGoldStrategy(100000, 2020, 4, 5, {
-      goldStorageFeePercent: 0.3 // 0.3% instead of default 0.7%
+      goldStorageFeePercent: 0.5 // 0.5% storage fee
     });
 
-    // Custom storage fee should result in lower total storage costs
+    // Custom storage fee should result in higher storage costs than default 0%
     expect(customResult.summary.totalStorageFees)
-      .toBeLessThan(defaultResult.summary.totalStorageFees);
+      .toBeGreaterThan(zeroStorageResult.summary.totalStorageFees);
+    expect(zeroStorageResult.summary.totalStorageFees).toBe(0);
   });
 
   test('given_zeroTransactionFee_when_calculating_then_noTransactionCosts', () => {
@@ -434,19 +442,11 @@ describe('configurable fees', () => {
   test('given_partialConfig_when_calculating_then_usesDefaultsForMissing', () => {
     const customResult = calculateGoldStrategy(100000, 2020, 4, 5, {
       goldTransactionPercent: 1.0
-      // goldStorageFeePercent not specified, should use default
+      // goldStorageFeePercent not specified, should use default (0%)
     });
 
-    // Should have storage fees (default rate applied)
-    expect(customResult.summary.totalStorageFees).toBeGreaterThan(0);
-
-    // The storage fee percentage used should match default (0.7%)
-    // Storage fees are calculated on gold value, so more gold (due to lower transaction fee) = higher storage
-    // Just verify that storage fees are reasonable (not zero, not absurdly high)
-    const avgGoldValue = (customResult.yearlyResults[0].startValueGbp +
-                          customResult.yearlyResults[4].endValueGbp) / 2;
-    const approximateStoragePercent = (customResult.summary.totalStorageFees / 5) / avgGoldValue * 100;
-    expect(approximateStoragePercent).toBeCloseTo(0.7, 0);
+    // Should have zero storage fees (default rate is 0%)
+    expect(customResult.summary.totalStorageFees).toBe(0);
   });
 
   test('given_emptyConfig_when_calculating_then_usesAllDefaults', () => {

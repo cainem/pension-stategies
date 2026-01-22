@@ -32,7 +32,7 @@ export const LIMITS = {
 // Transaction costs and fees
 export const COSTS = {
   goldTransactionPercent: 3,       // 3% buy/sell cost for gold (realistic dealer cost)
-  goldStorageFeePercent: 0.7,      // 0.7% annual storage fee for gold
+  goldStorageFeePercent: 0,        // 0% annual storage fee (assume home storage)
   sippManagementFeePercent: 0.5    // 0.5% annual management fee
 };
 

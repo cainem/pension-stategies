@@ -19,7 +19,7 @@ describe('configurable fees integration', () => {
   describe('default config values', () => {
     test('given_defaultCosts_when_checking_then_hasExpectedValues', () => {
       expect(COSTS.goldTransactionPercent).toBe(3);  // 3% realistic dealer cost
-      expect(COSTS.goldStorageFeePercent).toBe(0.7);
+      expect(COSTS.goldStorageFeePercent).toBe(0);   // 0% assumes home storage
       expect(COSTS.sippManagementFeePercent).toBe(0.5);
     });
   });
@@ -36,14 +36,15 @@ describe('configurable fees integration', () => {
         .toBeGreaterThan(defaultResult.initialWithdrawal.goldOuncesPurchased);
     });
 
-    test('given_lowerStorageFee_when_calculating_then_lowerTotalStorageCosts', () => {
+    test('given_storageFeeSetting_when_calculating_then_appliesStorageCosts', () => {
       const defaultResult = calculateGoldStrategy(100000, 2020, 4, 5);
       const customResult = calculateGoldStrategy(100000, 2020, 4, 5, {
-        goldStorageFeePercent: 0.3
+        goldStorageFeePercent: 0.5
       });
 
-      expect(customResult.summary.totalStorageFees)
-        .toBeLessThan(defaultResult.summary.totalStorageFees);
+      // Default is 0%, custom has storage fees
+      expect(defaultResult.summary.totalStorageFees).toBe(0);
+      expect(customResult.summary.totalStorageFees).toBeGreaterThan(0);
     });
 
     test('given_zeroFees_when_calculating_then_noFeesApplied', () => {

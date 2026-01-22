@@ -41,9 +41,9 @@ export const DISCLAIMERS = {
   goldStorageCosts: {
     id: 'goldStorageCosts',
     title: 'Gold Storage Costs',
-    content: `Physical gold requires secure storage, which may incur ongoing costs. This model
-      applies a default storage fee of 0.5% per year. Actual costs vary significantly based on
-      storage method (home safe, bank deposit box, professional vault) and insurance requirements.`,
+    content: `Physical gold requires secure storage. This model assumes home storage by default
+      (0% fee), but you can adjust this in Advanced Settings if using professional vault storage.
+      Actual costs vary based on storage method (home safe, bank deposit box, professional vault).`,
     icon: '🏦',
     priority: 3,
     appliesTo: ['gold', 'gold-sp500', 'gold-nasdaq100', 'gold-ftse100', 'gold-goldEtf']
