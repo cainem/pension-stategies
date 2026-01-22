@@ -615,6 +615,19 @@ h3 { font-size: var(--font-size-xl); }
   opacity: 0.9;
 }
 
+.cookie-notice {
+  margin-top: var(--spacing-lg);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: var(--spacing-md);
+  text-align: center;
+}
+
+.cookie-notice p {
+  opacity: 0.7 !important;
+  font-size: var(--font-size-xs) !important;
+  line-height: 1.4;
+}
+
 /* ============================================
    Initial Summary Cards
    ============================================ */
